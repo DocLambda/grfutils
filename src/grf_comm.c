@@ -53,6 +53,8 @@ static int get_data(const char *msg, size_t len, char *data)
 			datatype = GRF_DATATYPE_VERSION;
 		else if (strcmp(data, GRF_ANSWER_TIMEOUT) == 0)
 			datatype = GRF_DATATYPE_TIMEOUT;
+		else if (strcmp(data, GRF_ANSWER_REC) == 0)
+			datatype = GRF_DATATYPE_REC;
 		else
 			datatype = GRF_DATATYPE_DATA;
 	}
@@ -132,7 +134,7 @@ static int send_request_groups(int fd, char **groups)
 	int     datatype;
 	size_t  len;
 	
-	/* Get firmware version:
+	/* Start group scanning:
 	 *    <STX>GA<ETX>              -->
 	 *                              <-- <ACK>
 	 *                              <-- Group IDs
@@ -157,6 +159,58 @@ static int send_request_groups(int fd, char **groups)
 
 }
 
+static int send_request_devices(int fd, const char *group, char **devices, int *devicecount)
+{
+	char    msg[255];
+	char    data[255];
+	int     datatype;
+	size_t  len;
+	
+	/* Start group scanning:
+	 *    <STX>GD:$GROUPID<ETX>     -->
+	 *                              <-- <ACK>
+	 *                              <-- <STX>REC<ETX>
+	 *                              <-- Device IDs
+	 */
+	len = sprintf(msg, GRF_SCAN_GD, GRF_STX, group, GRF_ETX);
+	RETURN_ON_ERROR(grf_uart_write_message(fd, msg, len));
+	RETURN_ON_ERROR(grf_uart_read_message(fd, msg, &len));
+	if (msg_is_timeout(msg, len))
+		return ETIMEDOUT;
+	if (!msg_is_ack(msg, len))
+		return EIO;
+
+	/* Expect the REC answer */
+	RETURN_ON_ERROR(grf_uart_read_message(fd, msg, &len));
+	if (msg_is_timeout(msg, len))
+		return ETIMEDOUT;
+	datatype = get_data(msg, len, data);
+	if (datatype != GRF_DATATYPE_REC)
+		return EIO;
+
+	/* Receive devices until we get a timout */
+	*devicecount = 0;
+	while (true) 
+	{
+		RETURN_ON_ERROR(grf_uart_read_message(fd, msg, &len));
+		if (msg_is_timeout(msg, len))
+			break;
+		datatype = get_data(msg, len, data);
+		if (datatype != GRF_DATATYPE_DATA)
+			return EIO;
+		printf("Received device ID: %s\n", data);
+		/* TODO: Add device to the device array */ 
+
+		*devicecount += 1;
+#if 0
+		if (groups)
+		*groups = strdup(data);
+#endif
+	}
+
+	return 0;
+
+}
 /*****************************************************************************/
 
 /*****************************************************************************/
@@ -187,6 +241,22 @@ int grf_comm_scan_groups(int fd, char **groups)
 	 */
 	RETURN_ON_ERROR(send_init_sequence(fd));
 	RETURN_ON_ERROR(send_request_groups(fd, groups));
+
+	return 0;
+}
+/*****************************************************************************/
+
+/*****************************************************************************/
+int grf_comm_scan_devices(int fd, const char *group, char **devices, int *devicecount)
+{
+	/* Write the initialization sequence and get firmware version:
+	 *    <NUL><STX>01TESTA1<ETX>   -->
+	 *                              <-- <ACK>
+	 *    <STX>GD:$GROUPID<ETX>     -->
+	 *                              <-- Group IDs
+	 */
+	RETURN_ON_ERROR(send_init_sequence(fd));
+	RETURN_ON_ERROR(send_request_devices(fd, group, devices, devicecount));
 
 	return 0;
 }

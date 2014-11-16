@@ -13,7 +13,7 @@
 
 #define GRF_VERSION         	"0.1.0"
 #define GRF_DEFAULT_DEVICE	"/dev/ttyUSB0"
-#define GRF_DEFAULT_TIMEOUT	20 /* [1/10 s] --> 2 seconds */
+#define GRF_DEFAULT_TIMEOUT	600 /* [1/10 s] --> 60 seconds */
 #define GRF_DEFAULT_LOGLEVEL	GRF_LOGGING_WARN
 
 #define GRF_TIMEOUT_SCAN    	0 /* [1/10 s] --> infinite  */
@@ -21,6 +21,7 @@
 static void on_exit_handler(void);
 
 extern int grf_scan_group(int fd, int timeout, char **groupid);
+extern int grf_scan_devices(int fd, int timeout, const char *groupid, char **devices, int *devicecount);
 
 
 struct ctlparams {
@@ -127,6 +128,16 @@ static void usage(const char *progname)
 	fflush(stdout);
 }
 
+static const char *get_cmd_param(char **argv, int argc, int oidx)
+{
+	if (argc - optind < 2)
+	{
+		usage(argv[0]);
+		exit(EXIT_FAILURE);
+	}
+	return argv[oidx+1];
+}
+
 int main(int argc, char **argv)
 {
 	const char    *cmd;
@@ -229,6 +240,24 @@ int main(int argc, char **argv)
 			printf("No group found!\n");
 
 		printf("Found group: %s\n", groupid);
+		destroy_device();
+	} else if(strcasecmp(cmd, "scan-devices") == 0)
+	{
+		const char *groupid = get_cmd_param(argv, argc, optind);
+		char       *devices;
+		int         devicecount;
+		
+		init_device(dev, timeout, NULL);
+		ret = grf_scan_devices(params.fd, GRF_TIMEOUT_SCAN, groupid, &devices, &devicecount);
+		if (ret)
+		{
+			fprintf(stderr, "ERROR: Scanning devices of group %s failed: %s\n", groupid, strerror(ret));
+			exit(EXIT_FAILURE);
+		}
+		if (devicecount < 1)
+			printf("No devices found!\n");
+
+		printf("Found the %d devices in group %s:\n", devicecount, groupid);
 		destroy_device();
 	} else {
 		fprintf(stderr, "Unknown command \"%s\"\n", cmd);

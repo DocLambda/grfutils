@@ -18,6 +18,7 @@
 #define GRF_INIT_TEST           "%c01TESTA1%c"      /* Set RF module to command mode */
 #define GRF_INIT_SV             "%cSV%c"            /* Request sending the firmware version */
 #define GRF_SCAN_GA             "%cGA%c"            /* Request scanning group adress */
+#define GRF_SCAN_GD             "%cGD:%s%c"         /* Request scanning of all devices of a group adress */
 #define GRF_REQUEST_DA_START    "%cDA:%04x:05%c"    /* Request starting data acquisition */
 #define GRF_REQUEST_DA_STOP     "%cDA:%04x:01%c"    /* Request stopping data acquisition */
 #define GRF_REQUEST_SEND        "%cSD:%04x%c"       /* Request sending data */
@@ -32,7 +33,8 @@
 #define GRF_DATATYPE_ACK         1
 #define GRF_DATATYPE_DATA       10
 #define GRF_DATATYPE_VERSION    11
-#define GRF_DATATYPE_TIMEOUT    12
+#define GRF_DATATYPE_REC        12
+#define GRF_DATATYPE_TIMEOUT    19
 
 
 /* UART functions */
@@ -44,6 +46,6 @@ void grf_uart_set_timeout(int fd, unsigned int timeout);
 /* Communication functions */
 int grf_comm_init(int fd, char **firmware_version);
 int grf_comm_scan_groups(int fd, char **groups);
-
+int grf_comm_scan_devices(int fd, const char *group, char **devices, int *devicecount);
 
 #endif /* __GRF_H__ */
