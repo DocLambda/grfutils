@@ -19,9 +19,9 @@
 #define GRF_INIT_SV             "%cSV%c"            /* Request sending the firmware version */
 #define GRF_SCAN_GA             "%cGA%c"            /* Request scanning group adress */
 #define GRF_SCAN_GD             "%cGD:%s%c"         /* Request scanning of all devices of a group adress */
-#define GRF_REQUEST_DA_START    "%cDA:%04x:05%c"    /* Request starting data acquisition */
-#define GRF_REQUEST_DA_STOP     "%cDA:%04x:01%c"    /* Request stopping data acquisition */
-#define GRF_REQUEST_SEND        "%cSD:%04x%c"       /* Request sending data */
+#define GRF_REQUEST_DA_START    "%cDA:%s:05%c"      /* Request starting data acquisition */
+#define GRF_REQUEST_DA_STOP     "%cDA:%s:01%c"      /* Request stopping data acquisition */
+#define GRF_REQUEST_SEND        "%cSD:%s%c"         /* Request sending device data */
 
 #define GRF_ANSWER_TIMEOUT      "Timeout"           /* Also used for end of transmission ??? */
 #define GRF_ANSWER_DONE         "Done"              /* Expected answer to indicate completion of command */
