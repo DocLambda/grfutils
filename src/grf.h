@@ -1,11 +1,16 @@
 #ifndef __GRF_H__
 #define __GRF_H__
 
+#include <time.h>
+#include <stdint.h>
+
 #define RETURN_ON_ERROR(__func__) \
 {\
     int __retval__ = (__func__);\
     if ((__retval__)) return (__retval__); \
 }
+
+#define GRF_MAXDEVICES          40                  /* Maximum number of devices in one group */
 
 #define GRF_BAUDRATE            B9600
 
@@ -36,6 +41,19 @@
 #define GRF_DATATYPE_REC        12
 #define GRF_DATATYPE_TIMEOUT    19
 
+/* Data structures */
+struct grf_device
+{
+	char    *id;
+	time_t   timestamp;
+	/* TODO: Device properties */
+};
+
+struct grf_devicelist
+{
+	struct grf_device  devices[GRF_MAXDEVICES];
+	uint8_t            len;
+};
 
 /* UART functions */
 int  grf_uart_open(const char *dev);
@@ -46,6 +64,6 @@ void grf_uart_set_timeout(int fd, unsigned int timeout);
 /* Communication functions */
 int grf_comm_init(int fd, char **firmware_version);
 int grf_comm_scan_groups(int fd, char **groups);
-int grf_comm_scan_devices(int fd, const char *group, char **devices, int *devicecount);
+int grf_comm_scan_devices(int fd, const char *group, struct grf_devicelist *devices);
 
 #endif /* __GRF_H__ */

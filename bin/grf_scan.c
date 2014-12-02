@@ -27,11 +27,9 @@ int grf_scan_group(int fd, int timeout, char **groupid)
 	return grf_comm_scan_groups(fd, groupid);
 }
 
-int grf_scan_devices(int fd, int timeout, const char *groupid, char **devices, int *devicecount)
+int grf_scan_devices(int fd, int timeout, const char *groupid, struct grf_devicelist *devices)
 {
 	/* Initialize the variables */
-	*devices     = NULL;
-	*devicecount = 0;
 
 	/* Set the timeout for scanning devices */
 	grf_uart_set_timeout(fd, timeout);
@@ -39,5 +37,5 @@ int grf_scan_devices(int fd, int timeout, const char *groupid, char **devices, i
 	/* Scan for devices */
 	printf("Scanning for devices of group %s...\n", groupid);
 
-	return grf_comm_scan_devices(fd, groupid, devices, devicecount);
+	return grf_comm_scan_devices(fd, groupid, devices);
 }

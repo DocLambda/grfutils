@@ -21,8 +21,7 @@
 static void on_exit_handler(void);
 
 extern int grf_scan_group(int fd, int timeout, char **groupid);
-extern int grf_scan_devices(int fd, int timeout, const char *groupid, char **devices, int *devicecount);
-
+extern int grf_scan_devices(int fd, int timeout, const char *groupid, struct grf_devicelist *devices);
 
 struct ctlparams {
 	char          *dev;
@@ -246,21 +245,28 @@ int main(int argc, char **argv)
 		printf("    %s\n", groupid);
 	} else if(strcasecmp(cmd, "scan-devices") == 0)
 	{
-		const char *groupid = get_cmd_param(argv, argc, optind);
-		char       *devices;
-		int         devicecount;
+		const char            *groupid = get_cmd_param(argv, argc, optind);
+		struct grf_devicelist  devices;
+		int                    i;
 		
 		init_device(dev, timeout, NULL);
-		ret = grf_scan_devices(params.fd, GRF_TIMEOUT_SCAN, groupid, &devices, &devicecount);
+		ret = grf_scan_devices(params.fd, GRF_TIMEOUT_SCAN, groupid, &devices);
 		if (ret)
 		{
 			fprintf(stderr, "ERROR: Scanning devices of group %s failed: %s\n", groupid, strerror(ret));
 			exit(EXIT_FAILURE);
 		}
-		if (devicecount < 1)
+		destroy_device();
+
+		/* Output the result of the scan */
+		if (devices.len < 1)
 			printf("No devices found!\n");
 
-		printf("Found the %d devices in group %s:\n", devicecount, groupid);
+		printf("Found the %d devices in group %s:\n", devices.len, groupid);
+		for (i = 0; i < devices.len; i++)
+		{
+			printf("    %s\n", devices.devices[i].id);
+		}
 	} else {
 		fprintf(stderr, "Unknown command \"%s\"\n", cmd);
 		exit(EXIT_FAILURE);

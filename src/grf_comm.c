@@ -159,7 +159,7 @@ static int send_request_groups(int fd, char **groups)
 
 }
 
-static int send_request_devices(int fd, const char *group, char **devices, int *devicecount)
+static int send_request_devices(int fd, const char *group, struct grf_devicelist *devices)
 {
 	char    msg[255];
 	char    data[255];
@@ -189,7 +189,7 @@ static int send_request_devices(int fd, const char *group, char **devices, int *
 		return EIO;
 
 	/* Receive devices until we get a timout */
-	*devicecount = 0;
+	devices->len = 0;
 	while (true) 
 	{
 		RETURN_ON_ERROR(grf_uart_read_message(fd, msg, &len));
@@ -199,13 +199,14 @@ static int send_request_devices(int fd, const char *group, char **devices, int *
 		if (datatype != GRF_DATATYPE_DATA)
 			return EIO;
 		printf("Received device ID: %s\n", data);
-		/* TODO: Add device to the device array */ 
 
-		*devicecount += 1;
-#if 0
-		if (groups)
-		*groups = strdup(data);
-#endif
+		/* Add device to the device array and set the update
+		 * time to invalid (-1) to mark that the device was
+		 * not yet updated.
+		 */
+		devices->devices[devices->len].id        = strdup(data);
+		devices->devices[devices->len].timestamp = -1;
+		devices->len++;
 	}
 
 	return 0;
@@ -247,8 +248,11 @@ int grf_comm_scan_groups(int fd, char **groups)
 /*****************************************************************************/
 
 /*****************************************************************************/
-int grf_comm_scan_devices(int fd, const char *group, char **devices, int *devicecount)
+int grf_comm_scan_devices(int fd, const char *group, struct grf_devicelist *devices)
 {
+	/* Initialize the device list */
+	devices->len = 0;
+
 	/* Write the initialization sequence and get firmware version:
 	 *    <NUL><STX>01TESTA1<ETX>   -->
 	 *                              <-- <ACK>
@@ -256,7 +260,7 @@ int grf_comm_scan_devices(int fd, const char *group, char **devices, int *device
 	 *                              <-- Group IDs
 	 */
 	RETURN_ON_ERROR(send_init_sequence(fd));
-	RETURN_ON_ERROR(send_request_devices(fd, group, devices, devicecount));
+	RETURN_ON_ERROR(send_request_devices(fd, group, devices));
 
 	return 0;
 }
