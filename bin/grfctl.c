@@ -236,11 +236,14 @@ int main(int argc, char **argv)
 			fprintf(stderr, "ERROR: Scanning group IDs failed: %s\n", strerror(ret));
 			exit(EXIT_FAILURE);
 		}
+		destroy_device();
+
+		/* Output the result of the scan */
 		if (!groupid)
 			printf("No group found!\n");
 
-		printf("Found group: %s\n", groupid);
-		destroy_device();
+		printf("Found the following groups:\n");
+		printf("    %s\n", groupid);
 	} else if(strcasecmp(cmd, "scan-devices") == 0)
 	{
 		const char *groupid = get_cmd_param(argv, argc, optind);
@@ -258,7 +261,6 @@ int main(int argc, char **argv)
 			printf("No devices found!\n");
 
 		printf("Found the %d devices in group %s:\n", devicecount, groupid);
-		destroy_device();
 	} else {
 		fprintf(stderr, "Unknown command \"%s\"\n", cmd);
 		exit(EXIT_FAILURE);
