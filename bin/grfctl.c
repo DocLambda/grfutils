@@ -24,6 +24,7 @@ extern int grf_scan_group(int fd, int timeout, char **groupid);
 extern int grf_scan_devices(int fd, int timeout, char **groupid, struct grf_devicelist *devices);
 
 struct ctlparams {
+	bool           isinit;
 	char          *dev;
 	int            fd;
 	bool           tty_restore;
@@ -40,6 +41,7 @@ static int init_device(const char *dev, int timeout, char **firmware_version)
 	printf("Initializing communication at %s...\n", dev);
 
 	/* Setup the exit handler */
+	params.isinit      = true;
 	params.dev         = (char *) dev;
 	params.fd          = -1;
 	params.tty_restore = false;
@@ -74,12 +76,15 @@ static int init_device(const char *dev, int timeout, char **firmware_version)
 			free(firmware_version);
 		exit(EXIT_FAILURE);
 	}
-	
+
 	return fd;
 }
 
 static void destroy_device(void)
-{    
+{
+	if (!params.isinit)
+		return;
+
 	printf("Closing communication at device %s...\n", params.dev);
 
 	/* Free the device name */
@@ -89,12 +94,13 @@ static void destroy_device(void)
 	/* Restore UART settings */
 	if (params.tty_restore)
 		tcsetattr(params.fd, TCSANOW, &(params.tty_attr));
-	
+
 	/* Close UART */
 	if (params.fd > 0)
 		grf_uart_close(params.fd);
-	
+
 	/* Make the exit handler do nothing */
+	params.isinit      = false;
 	params.fd          = -1;
 	params.tty_restore = false;
 }
