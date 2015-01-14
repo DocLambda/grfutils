@@ -5,6 +5,7 @@
 
 #include <string.h>
 #include <ctype.h>
+#include <time.h>
 
 #include "grf_logging.h"
 
@@ -34,7 +35,36 @@ static void grf_logging_print(const char *msg)
     printf("\n");
 }
 
+static void grf_logging_print_hex(const char *msg, const char *hexstr, size_t hexlen)
+{
+	int len;
+	int i;
 
+	if (!msg)
+	{
+		printf("<0x00>\n");
+		return;
+	}
+
+	len = strlen(msg);
+	for (i = 0; i < len; i++)
+	{
+		if (isprint(msg[i]))
+		printf("%c", msg[i]);
+		else
+		printf("<0x%02x>", msg[i]);
+	}
+
+	printf(" (");
+	for (i = 0; i < hexlen; i++)
+	{
+		if (i == 0)
+		printf("%02x", hexstr[i]);
+		else
+		printf(" %02x", hexstr[i]);
+	}
+	printf(")\n");
+}
 
 void grf_logging_setlevel(int level)
 {
@@ -73,10 +103,28 @@ void grf_logging_log(int level, const char *fmt, ...)
 			break;
 	}
 
-	printf("%s", loglevel);
+	printf("%ld %s", time(NULL), loglevel);
 	va_start(arglist, fmt);
 	vasprintf(&msg, fmt, arglist);
 	va_end(arglist);
 	grf_logging_print(msg);
+	free(msg);
+}
+
+void grf_logging_dbg_hex(const char *hexstr, size_t hexlen, const char *fmt, ...)
+{
+	va_list     arglist;
+	const char *loglevel = "DEBUG: ";
+	char       *msg;
+
+	/* We should not log this message... */
+	if (GRF_LOGGING_DEBUG > log_consolelevel)
+		return;
+
+	printf("%ld %s", time(NULL), loglevel);
+	va_start(arglist, fmt);
+	vasprintf(&msg, fmt, arglist);
+	va_end(arglist);
+	grf_logging_print_hex(msg, hexstr, hexlen);
 	free(msg);
 }

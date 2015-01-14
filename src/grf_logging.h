@@ -14,5 +14,6 @@
 
 void grf_logging_setlevel(int level);
 void grf_logging_log(int level, const char *fmt, ...);
+void grf_logging_dbg_hex(const char *hexstr, size_t hexlen, const char *fmt, ...);
 
 #endif /* __GRF_LOGGING_H */
