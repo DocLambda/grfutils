@@ -71,8 +71,11 @@ int grf_uart_setup(int fd)
 
     /* Setup the port for communication. */
     tcgetattr(fd, &tty_attr);
-    cfmakeraw(&tty_attr);
+    tcflush(fd, TCIOFLUSH);
     cfsetspeed(&tty_attr, GRF_BAUDRATE);
+    cfmakeraw(&tty_attr);
+    tcflush(fd, TCIOFLUSH);
+
     /* Set port to blocking */
     tty_attr.c_cc[VMIN]  = 0;
     tty_attr.c_cc[VTIME] = 10;
