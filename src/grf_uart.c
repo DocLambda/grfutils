@@ -196,6 +196,8 @@ int grf_uart_write_message(int fd, const char *message, size_t len)
         written += count;
     } while (written < len);
 
+    fsync(fd);
+
     return 0;
 }
 
