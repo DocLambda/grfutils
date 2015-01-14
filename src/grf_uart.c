@@ -17,7 +17,7 @@ void grf_uart_set_timeout(int fd, unsigned int timeout)
 {
     struct termios tty_attr;
 
-    grf_logging_dbg("Setting timeout of %d to %.1f seconds...", fd, timeout/10.0f);
+    grf_logging_info("Setting timeout of %d to %.1f seconds...", fd, timeout/10.0f);
 
     /* In case no timeout is given, we always block to retrieve at
      * least one character.
@@ -46,7 +46,7 @@ int grf_uart_open(const char *dev)
     /* Open the device for read and write and prevent it from
      * becoming a control TTY.
      */
-    grf_logging_dbg("Opening %s...", dev);
+    grf_logging_info("Opening %s...", dev);
     fd = open(dev, O_RDWR | O_NOCTTY);
     if (fd < 0)
         return fd;
@@ -67,7 +67,7 @@ int grf_uart_setup(int fd)
 {
     struct termios tty_attr;
 
-    grf_logging_dbg("Setting up UART %d...", fd);
+    grf_logging_info("Setting up UART %d...", fd);
 
     /* Setup the port for communication. */
     tcgetattr(fd, &tty_attr);
@@ -177,7 +177,7 @@ int grf_uart_read_message(int fd, char *message, size_t *len)
     if (*len < 1)
 	grf_logging_dbg("recv: %s", "NONE");
     else
-	grf_logging_dbg("recv: %s (len=%zu)", message, *len);
+	grf_logging_dbg_hex(message, *len, "recv: %s (len=%zu)", message, *len);
     
     return retval;
 }
@@ -187,7 +187,7 @@ int grf_uart_write_message(int fd, const char *message, size_t len)
     ssize_t count;
     size_t  written = 0;
     
-    grf_logging_dbg("send: %s", message);
+    grf_logging_dbg_hex(message, len, "send: %s", message);
     
     do {
         count = write(fd, message, len*sizeof(char));
