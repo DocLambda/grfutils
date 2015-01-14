@@ -256,7 +256,7 @@ int main(int argc, char **argv)
 		int                    i;
 		
 		init_device(dev, timeout, NULL);
-		ret = grf_scan_devices(params.fd, GRF_TIMEOUT_SCAN, groupid, &devices);
+		ret = grf_scan_devices(params.fd, GRF_TIMEOUT_SCAN, &groupid, &devices);
 		if (ret)
 		{
 			if (!groupid)
