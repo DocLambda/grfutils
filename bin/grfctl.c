@@ -194,6 +194,7 @@ int main(int argc, char **argv)
 					loglevel = GRF_LOGGING_DEBUG_IO;
 				} else {
 					fprintf(stderr, "Unknown log-level %s!\n", optarg);
+					fprintf(stderr, "Use one of the following levels: error, warn, info, debug, debugio.\n");
 					exit(EXIT_FAILURE);
 				}
 				break;
@@ -227,7 +228,7 @@ int main(int argc, char **argv)
 		
 		init_device(dev, timeout, &firmware_version);
 		if (firmware_version)
-			printf("firmware version %s\n", firmware_version);
+			printf("Firmware version %s\n", firmware_version);
 		free(firmware_version);
 		destroy_device();
 	} else if(strcasecmp(cmd, "scan-groups") == 0)
