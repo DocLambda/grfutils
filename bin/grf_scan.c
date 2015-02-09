@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 #include <string.h>
 #include <errno.h>
@@ -18,7 +19,7 @@ int grf_scan_group(int fd, int timeout, char **groupid)
 	grf_uart_set_timeout(fd, timeout);
 
 	/* Scan for group IDs */
-	printf("Scanning group IDs...\n");
+	printf("Scanning for group...\n");
 	printf( "    Please activate sending the group ID at your smoke detector by\n"
 		"    pressing the \"programming\" button until the programming LED\n"
 		"    flashes once per second. Afterwards press the smoke detector\n"
