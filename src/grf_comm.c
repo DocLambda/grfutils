@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "grf.h"
+#include "grf_logging.h"
 
 /* Announce low-level uart read/write functions */
 extern int grf_uart_read_message(int fd, char *message, size_t *len);
