@@ -21,7 +21,7 @@
 static void on_exit_handler(void);
 
 extern int grf_scan_group(int fd, int timeout, char **groupid);
-extern int grf_scan_devices(int fd, int timeout, char **groupid, struct grf_devicelist *devices);
+extern int grf_scan_devices(int fd, int timeout, const char *groupid, struct grf_devicelist *devices);
 
 struct ctlparams {
 	bool           isinit;
@@ -126,7 +126,7 @@ static void usage(const char *progname)
 		"    show-version                             show the program version\n"
 		"    show-firmware-version                    show the firmware version of the device\n"
 		"    scan-groups                              scan for detector groups\n"
-		"    scan-devices                             scan for all devices in a group\n"
+		"    scan-devices <group>                     scan for all devices in the given group\n"
 		);
 	printf("\n");
 	
@@ -251,7 +251,7 @@ int main(int argc, char **argv)
 		printf("    %s\n", groupid);
 	} else if(strcasecmp(cmd, "scan-devices") == 0)
 	{
-		char                  *groupid = NULL;
+		const char            *groupid = get_cmd_param(argv, argc, optind);
 		struct grf_devicelist  devices;
 		int                    i;
 		
@@ -259,11 +259,8 @@ int main(int argc, char **argv)
 		ret = grf_scan_devices(params.fd, GRF_TIMEOUT_SCAN, &groupid, &devices);
 		if (ret)
 		{
-			if (!groupid)
-				fprintf(stderr, "ERROR: Scanning for group failed: %s\n", strerror(ret));
-			else
-				fprintf(stderr, "ERROR: Scanning devices of group %s failed: %s\n", groupid, strerror(ret));
-				exit(EXIT_FAILURE);
+			fprintf(stderr, "ERROR: Scanning devices of group %s failed: %s\n", groupid, strerror(ret));
+			exit(EXIT_FAILURE);
 		}
 		destroy_device();
 
