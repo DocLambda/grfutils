@@ -215,6 +215,65 @@ static int send_request_devices(int fd, const char *group, struct grf_devicelist
 	return 0;
 
 }
+
+static int send_data_request(int fd, const char *deviceid, uint8_t reqtype)
+{
+	char    msg[255];
+	char    data[255];
+	int     datatype;
+	size_t  len;
+
+	/* Request data acquisition:
+	 *    <STX>DA:$DEVICEID:$REQTYPE<ETX> -->
+	 *                                   <-- <ACK>
+	 * if request type is 1:
+	 *                                   <-- DATA
+	 * else:
+	 *                                   <-- <STX>Done<ETX>
+	 */
+	len = sprintf(msg, GRF_REQUEST_DA_TMPL, GRF_STX, deviceid, reqtype, GRF_ETX);
+	RETURN_ON_ERROR(grf_uart_write_message(fd, msg, len));
+	RETURN_ON_ERROR(grf_uart_read_message(fd, msg, &len));
+	if (msg_is_timeout(msg, len))
+		return ETIMEDOUT;
+	if (!msg_is_ack(msg, len))
+		return EIO;
+
+	/* Expect the Done answer */
+	if (reqtype != 1)
+	{
+		RETURN_ON_ERROR(grf_uart_read_message(fd, msg, &len));
+		if (msg_is_timeout(msg, len))
+			return ETIMEDOUT;
+		datatype = get_data(msg, len, data);
+		if (datatype != GRF_DATATYPE_DONE)
+			return EIO;
+	}
+	return 0;
+}
+
+static int recv_data(int fd, struct grf_device *device)
+{
+	char    msg[255];
+	char    data[255];
+	int     datatype;
+	size_t  len;
+
+	while (true)
+	{
+		RETURN_ON_ERROR(grf_uart_read_message(fd, msg, &len));
+		if (msg_is_timeout(msg, len))
+			break;
+		datatype = get_data(msg, len, data);
+		if (datatype != GRF_DATATYPE_DATA)
+			return EIO;
+		grf_logging_dbg("    data: %s", data);
+
+		/* TODO: Interprete the received data.*/
+	}
+
+	return 0;
+}
 /*****************************************************************************/
 
 /*****************************************************************************/
@@ -264,6 +323,35 @@ int grf_comm_scan_devices(int fd, const char *group, struct grf_devicelist *devi
 	 */
 	RETURN_ON_ERROR(send_init_sequence(fd));
 	RETURN_ON_ERROR(send_request_devices(fd, group, devices));
+
+	return 0;
+}
+/*****************************************************************************/
+
+/*****************************************************************************/
+int grf_comm_read_data(int fd, const char *deviceid, struct grf_device *device)
+{
+	/* Initialize the device data */
+	device->id = strdup(deviceid);
+
+	/* Write the initialization sequence and receive acquired data:
+	 *    <NUL><STX>01TESTA1<ETX>   -->
+	 *                              <-- <ACK>
+	 *    <STX>DA:$DEVICEID:05<ETX> -->
+	 *                              <-- <ACK>
+	 *                              <-- <STX>Done<ETX>
+	 *    <STX>DA:$DEVICEID:01<ETX> -->
+	 *                              <-- <ACK>
+	 *                              <-- DATA
+	 *    <STX>DA:$DEVICEID:04<ETX> -->
+	 *                              <-- <ACK>
+	 *                              <-- <STX>Done<ETX>
+	 */
+	RETURN_ON_ERROR(send_init_sequence(fd));
+	RETURN_ON_ERROR(send_data_request(fd, deviceid, GRF_DA_TYPE_START));
+	RETURN_ON_ERROR(send_data_request(fd, deviceid, GRF_DA_TYPE_SEND));
+	RETURN_ON_ERROR(recv_data(fd, device));
+	RETURN_ON_ERROR(send_data_request(fd, deviceid, GRF_DA_TYPE_STOP));
 
 	return 0;
 }

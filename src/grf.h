@@ -71,5 +71,6 @@ void grf_uart_set_timeout(int fd, unsigned int timeout);
 int grf_comm_init(int fd, char **firmware_version);
 int grf_comm_scan_groups(int fd, char **groups);
 int grf_comm_scan_devices(int fd, const char *group, struct grf_devicelist *devices);
+int grf_comm_read_data(int fd, const char *deviceid, struct grf_device *device);
 
 #endif /* __GRF_H__ */
