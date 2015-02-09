@@ -22,8 +22,10 @@ static void on_exit_handler(void);
 
 extern int grf_scan_group(int fd, int timeout, char **groupid);
 extern int grf_scan_devices(int fd, int timeout, const char *groupid, struct grf_devicelist *devices);
+extern int grf_read_data(int fd, int timeout, const char *deviceid, struct grf_device *device);
 
-struct ctlparams {
+struct ctlparams
+{
 	bool           isinit;
 	char          *dev;
 	int            fd;
@@ -127,6 +129,7 @@ static void usage(const char *progname)
 		"    show-firmware-version                    show the firmware version of the device\n"
 		"    scan-groups                              scan for detector groups\n"
 		"    scan-devices <group>                     scan for all devices in the given group\n"
+		"    request-data <device>                    read the data of the given device\n"
 		);
 	printf("\n");
 	
@@ -228,7 +231,7 @@ int main(int argc, char **argv)
 		
 		init_device(dev, timeout, &firmware_version);
 		if (firmware_version)
-			printf("Firmware version %s\n", firmware_version);
+			printf("Firmware version: %s\n", firmware_version);
 		free(firmware_version);
 		destroy_device();
 	} else if(strcasecmp(cmd, "scan-groups") == 0)
@@ -274,6 +277,21 @@ int main(int argc, char **argv)
 		{
 			printf("    %s\n", devices.devices[i].id);
 		}
+	} else if(strcasecmp(cmd, "request-data") == 0)
+	{
+		const char            *deviceid = get_cmd_param(argv, argc, optind);
+		struct grf_device      device;
+
+		init_device(dev, timeout, NULL);
+		ret = grf_read_data(params.fd, timeout, deviceid, &device);
+		if (ret)
+		{
+			fprintf(stderr, "ERROR: Requesting data of device %s failed: %s\n", deviceid, strerror(ret));
+			exit(EXIT_FAILURE);
+		}
+		destroy_device();
+
+		/* TODO: Output the result of the request */
 	} else {
 		fprintf(stderr, "Unknown command \"%s\"\n", cmd);
 		exit(EXIT_FAILURE);
