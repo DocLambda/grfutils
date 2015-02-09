@@ -134,6 +134,11 @@ int grf_uart_read_message(int fd, char *message, size_t *len)
 					*len       = 1;
 					msgstarted = true;
 					break;
+				case GRF_CONT:
+					/* Just digest the continuation of the
+					 * previous message.
+					 */
+					break;
 				default:
 					grf_logging_err("State invalid (INITIAL and got \'%c\')!\n", c);
 					retval     = EINVAL;

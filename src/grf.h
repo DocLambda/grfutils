@@ -17,6 +17,7 @@
 #define GRF_NUL                 0x00
 #define GRF_STX                 0x02
 #define GRF_ETX                 0x03
+#define GRF_CONT                0x0a
 #define GRF_ACK                 0x06
 #define GRF_NAK                 0x15
 
