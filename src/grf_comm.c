@@ -55,6 +55,8 @@ static int get_data(const char *msg, size_t len, char *data)
 			datatype = GRF_DATATYPE_TIMEOUT;
 		else if (strcmp(data, GRF_ANSWER_REC) == 0)
 			datatype = GRF_DATATYPE_REC;
+		else if (strcmp(data, GRF_ANSWER_DONE) == 0)
+			datatype = GRF_DATATYPE_DONE;
 		else
 			datatype = GRF_DATATYPE_DATA;
 	}

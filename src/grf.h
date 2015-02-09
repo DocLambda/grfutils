@@ -39,6 +39,7 @@
 #define GRF_DATATYPE_DATA       10
 #define GRF_DATATYPE_VERSION    11
 #define GRF_DATATYPE_REC        12
+#define GRF_DATATYPE_DONE       13
 #define GRF_DATATYPE_TIMEOUT    19
 
 /* Data structures */
