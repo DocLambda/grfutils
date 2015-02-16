@@ -124,7 +124,8 @@ static int send_request_firmware_version(int fd, char **firmware_version)
 	if (datatype != GRF_DATATYPE_VERSION)
 		return EIO;
 
-	*firmware_version = strdup(data);
+	if (firmware_version)
+		*firmware_version = strdup(data);
 
 	return 0;
 
@@ -286,8 +287,7 @@ int grf_comm_init(int fd, char **firmware_version)
 	 *                              <-- Version string
 	 */
 	RETURN_ON_ERROR(send_init_sequence(fd));
-	if (firmware_version)
-		RETURN_ON_ERROR(send_request_firmware_version(fd, firmware_version));
+	RETURN_ON_ERROR(send_request_firmware_version(fd, firmware_version));
 
 	return 0;
 }
