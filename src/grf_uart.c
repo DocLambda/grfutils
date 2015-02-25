@@ -35,6 +35,9 @@ void grf_uart_set_timeout(int fd, unsigned int timeout)
 
 	if (tcsetattr(fd, TCSANOW, &tty_attr))
 		grf_logging_err("Setting timeout of %d to %u failed: %s", fd, timeout, strerror(errno));
+
+	/* Make sure settings are actually transmitted */
+	tcdrain(fd);
 }
 /*****************************************************************************/
 
@@ -84,7 +87,8 @@ int grf_uart_setup(int fd)
 	if (tcsetattr(fd, TCSANOW, &tty_attr))
 		return errno;
 
-	return 0;
+	/* Make sure settings are actually transmitted */
+	return tcdrain(fd);
 }
 
 void grf_uart_close(int fd)
