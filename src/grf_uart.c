@@ -30,8 +30,8 @@ void grf_uart_set_timeout(int fd, unsigned int timeout)
 
 	tty_attr.c_cc[VTIME] = timeout;
 
-	grf_logging_dbg("  vmin  = %d...", tty_attr.c_cc[VMIN]);
-	grf_logging_dbg("  vtime = %d...", tty_attr.c_cc[VTIME]);
+	grf_logging_dbg("  vmin  = %u...", tty_attr.c_cc[VMIN]);
+	grf_logging_dbg("  vtime = %u...", tty_attr.c_cc[VTIME]);
 
 	if (tcsetattr(fd, TCSANOW, &tty_attr))
 		grf_logging_err("Setting timeout of %d to %u failed: %s", fd, timeout, strerror(errno));
