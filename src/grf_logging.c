@@ -73,13 +73,17 @@ void grf_logging_setlevel(int level)
 
 void grf_logging_log(int level, const char *fmt, ...)
 {
-	va_list     arglist;
-	const char *loglevel;
-	char       *msg;
+	va_list          arglist;
+	struct timespec  logtime;
+	const char      *loglevel;
+	char            *msg;
 	
 	/* We should not log this message... */
 	if (level > log_consolelevel)
 		return;
+
+	/* Determine the point in time the logging occures */
+	clock_gettime(CLOCK_REALTIME, &logtime);
 
 	switch(level)
 	{
@@ -103,25 +107,31 @@ void grf_logging_log(int level, const char *fmt, ...)
 			break;
 	}
 
-	printf("%ld %s", time(NULL), loglevel);
+	printf("%.3f: %s", logtime.tv_sec + (float)logtime.tv_nsec*10E-9, loglevel);
 	va_start(arglist, fmt);
 	vasprintf(&msg, fmt, arglist);
 	va_end(arglist);
 	grf_logging_print(msg);
-	free(msg);
+	if (msg)
+		free(msg);
+	fflush(stdout);
 }
 
 void grf_logging_dbg_hex(const char *hexstr, size_t hexlen, const char *fmt, ...)
 {
-	va_list     arglist;
-	const char *loglevel = "DEBUG: ";
-	char       *msg;
+	va_list          arglist;
+	struct timespec  logtime;
+	const char      *loglevel = "DEBUG: ";
+	char            *msg;
 
 	/* We should not log this message... */
 	if (GRF_LOGGING_DEBUG > log_consolelevel)
 		return;
 
-	printf("%ld %s", time(NULL), loglevel);
+	/* Determine the point in time the logging occures */
+	clock_gettime(CLOCK_REALTIME, &logtime);
+
+	printf("%.3f: %s", logtime.tv_sec + (float)logtime.tv_nsec*10E-9, loglevel);
 	va_start(arglist, fmt);
 	vasprintf(&msg, fmt, arglist);
 	va_end(arglist);
