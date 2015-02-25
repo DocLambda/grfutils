@@ -20,12 +20,12 @@ static int get_data(const char *msg, size_t len, char *data)
 	
 	/* Clear the data field */
 	memset(data, '\0', len*sizeof(char));
-	
+
 	/* Check for control characters */
 	if (len <= 1)
 	{
 		data[0] = msg[0];
-		
+
 		/* Determine the datatype */
 		switch(data[0])
 		{
@@ -39,16 +39,15 @@ static int get_data(const char *msg, size_t len, char *data)
 	}
 	else
 	{
-		
 		/* Check the leading STX and trailing ETX */
 		if (msg[0] != GRF_STX || msg[len-1] != GRF_ETX)
 			return GRF_DATATYPE_ERROR;
-		
+
 		/* Copy only the real content of sent data and
 		 * make sure we have a terminating \0 character.
 		 */
 		strncpy(data, msg+1, (len-2));
-		
+
 		/* Determine the datatype */
 		if (strncmp(data, GRF_ANSWER_VERSION, 7) == 0)
 			datatype = GRF_DATATYPE_VERSION;
@@ -61,7 +60,7 @@ static int get_data(const char *msg, size_t len, char *data)
 		else
 			datatype = GRF_DATATYPE_DATA;
 	}
-	
+
 	return datatype;
 }
 /*****************************************************************************/
@@ -70,14 +69,14 @@ static int get_data(const char *msg, size_t len, char *data)
 static bool msg_is_ack(char *msg, size_t len)
 {
 	char data[len];
-	
+
 	return (get_data(msg, len, data) == GRF_DATATYPE_ACK);
 }
 
 static bool msg_is_timeout(char *msg, size_t len)
 {
 	char data[len];
-	
+
 	return (get_data(msg, len, data) == GRF_DATATYPE_TIMEOUT);
 }
 /*****************************************************************************/
@@ -110,7 +109,7 @@ static int send_request_firmware_version(int fd, char **firmware_version)
 	char    data[255];
 	int     datatype;
 	size_t  len;
-	
+
 	/* Get firmware version:
 	 *    <STX>SV<ETX>              -->
 	 *                              <-- Version string
@@ -128,7 +127,6 @@ static int send_request_firmware_version(int fd, char **firmware_version)
 		*firmware_version = strdup(data);
 
 	return 0;
-
 }
 
 static int send_request_groups(int fd, char **groups)
@@ -137,7 +135,7 @@ static int send_request_groups(int fd, char **groups)
 	char    data[255];
 	int     datatype;
 	size_t  len;
-	
+
 	/* Start group scanning:
 	 *    <STX>GA<ETX>              -->
 	 *                              <-- <ACK>
@@ -160,7 +158,6 @@ static int send_request_groups(int fd, char **groups)
 		*groups = strdup(data);
 
 	return 0;
-
 }
 
 static int send_request_devices(int fd, const char *group, struct grf_devicelist *devices)
@@ -169,7 +166,7 @@ static int send_request_devices(int fd, const char *group, struct grf_devicelist
 	char    data[255];
 	int     datatype;
 	size_t  len;
-	
+
 	/* Start group scanning:
 	 *    <STX>GD:$GROUPID<ETX>     -->
 	 *                              <-- <ACK>
@@ -214,7 +211,6 @@ static int send_request_devices(int fd, const char *group, struct grf_devicelist
 	}
 
 	return 0;
-
 }
 
 static int send_data_request(int fd, const char *deviceid, uint8_t reqtype)
