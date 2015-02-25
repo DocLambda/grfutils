@@ -108,7 +108,8 @@ int grf_uart_read_message(int fd, char *message, size_t *len)
 	int  retval     = ETIMEDOUT;
 
 	/* Clear message buffer */
-	memset(message, '\0', *len * sizeof(char));
+	/* FIXME: Use a common define for 255 in both uart and caller side. */
+	memset(message, '\0', 255 * sizeof(char));
 	*len = 0;
 
 	/* Wait for begin of message */
