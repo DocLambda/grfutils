@@ -47,12 +47,34 @@
 #define GRF_DATATYPE_DONE       13
 #define GRF_DATATYPE_TIMEOUT    19
 
+#define GRF_UNKNOWN_REGISTER_INDEX(__regid__) ((__regid__) - 0x14)
+
 /* Data structures */
 struct grf_device
 {
 	char    *id;
 	time_t   timestamp;
-	/* TODO: Device properties */
+
+	/* Device properties */
+	uint32_t serial_number;
+	float    operation_time;          /* seconds */
+	uint8_t  smoke_chamber_pollution; /* FIXME: percent? */
+	float    battery_voltage;         /* FIXME: volt? */
+	float    temperature1;            /* degree celcius */
+	float    temperature2;            /* degree celcius */
+	/* Alerts */
+	uint8_t  local_smoke_alerts;
+	uint8_t  local_temperature_alerts;
+	uint8_t  local_test_alerts;
+	uint8_t  remote_cable_alerts;
+	uint8_t  remote_radio_alerts;
+	uint8_t  remote_cable_test_alerts;
+	uint8_t  remote_radio_test_alerts;
+	/* Unknown data */
+	uint16_t smoke_chamber_value;     /* FIXME: unknown */
+	uint32_t unknown_02;              /* FIXME: unknown */
+	uint32_t unknown_registers[40];   /* FIXME: unknown registers 0x14 to 0x3B */
+	uint32_t unknown_64;              /* FIXME: unknown */
 };
 
 struct grf_devicelist
