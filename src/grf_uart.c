@@ -167,7 +167,8 @@ int grf_uart_read_message(int fd, char *message, size_t *len)
 					grf_logging_err("State invalid (STARTED and got \'%c\')!\n", c);
 					retval     = EINTR;
 					stop       = true;
-					case GRF_NUL:
+					break;
+				case GRF_NUL:
 				case GRF_ACK:
 				case GRF_NAK:
 					grf_logging_err("State invalid (STARTED and got \'%c\')!\n", c);
