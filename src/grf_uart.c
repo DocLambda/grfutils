@@ -114,7 +114,7 @@ int grf_uart_read_message(int fd, char *message, size_t *len)
 	/* Wait for begin of message */
 	while (read(fd, &c, 1*sizeof(char)) > 0)
 	{
-		grf_logging_log(GRF_LOGGING_DEBUG_IO, "read: 0x%02x\n", c);
+		grf_logging_log(GRF_LOGGING_DEBUG_IO, "read: 0x%02x", c);
 
 		/* Maintain state machine for parsing */
 		if (!msgstarted)
@@ -144,7 +144,7 @@ int grf_uart_read_message(int fd, char *message, size_t *len)
 					 */
 					break;
 				default:
-					grf_logging_err("State invalid (INITIAL and got \'%c\')!\n", c);
+					grf_logging_err("State invalid (INITIAL and got \'%c\')!", c);
 					retval     = EINVAL;
 					stop       = true;
 					break;
@@ -164,14 +164,14 @@ int grf_uart_read_message(int fd, char *message, size_t *len)
 					stop       = true;
 					break;
 				case GRF_STX:
-					grf_logging_err("State invalid (STARTED and got \'%c\')!\n", c);
+					grf_logging_err("State invalid (STARTED and got \'%c\')!", c);
 					retval     = EINTR;
 					stop       = true;
 					break;
 				case GRF_NUL:
 				case GRF_ACK:
 				case GRF_NAK:
-					grf_logging_err("State invalid (STARTED and got \'%c\')!\n", c);
+					grf_logging_err("State invalid (STARTED and got \'%c\')!", c);
 					retval     = EINVAL;
 					stop       = true;
 					break;
@@ -187,7 +187,10 @@ int grf_uart_read_message(int fd, char *message, size_t *len)
 	}
 	
 	if (*len < 1)
-		grf_logging_dbg("recv: %s", "NONE");
+	{
+		grf_logging_dbg("recv: %s", "No data received!");
+		retval = errno;
+	}
 	else
 		grf_logging_dbg_hex(message, *len, "recv: %s (len=%zu)", message, *len);
 
