@@ -18,18 +18,23 @@ struct grf_radio
 {
 	char           *dev;
 	int             fd;
-	struct termios  tty_attr;
-	struct termios  tty_attr_saved;
+	bool            is_initialized;
+
 	uint32_t        timeout_user;
 	uint8_t         timeout_tty;
 	uint8_t         timeout_repeats;
+
+	struct termios  tty_attr;
+	struct termios  tty_attr_saved;
+
+	char           *firmware_version;
 };
 
+/* Radio functions */
+int  grf_radio_init(struct grf_radio *radio, const char *dev, unsigned int timeout);
+int  grf_radio_exit(struct grf_radio *radio);
+
 /* UART functions */
-int  grf_uart_open(const char *dev);
-int  grf_uart_setup(int fd);
-void grf_uart_close(int fd);
-void grf_uart_set_timeout(int fd, unsigned int timeout);
 int  grf_uart_read_message(int fd, char *message, size_t *len);
 int  grf_uart_write_message(int fd, const char *message, size_t len);
 int  grf_uart_write_ctl(int fd, char ctl);

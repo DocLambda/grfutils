@@ -13,104 +13,21 @@
 
 #define GRF_VERSION         	"0.1.0"
 #define GRF_DEFAULT_DEVICE	"/dev/ttyUSB0"
-#define GRF_DEFAULT_TIMEOUT	600 /* [1/10 s] --> 60 seconds */
+#define GRF_DEFAULT_TIMEOUT	60 /* seconds */
 #define GRF_DEFAULT_LOGLEVEL	GRF_LOGGING_WARN
-
-#define GRF_TIMEOUT_SCAN    	0 /* [1/10 s] --> infinite  */
 
 static void on_exit_handler(void);
 
-extern int grf_scan_group(int fd, int timeout, char **groupid);
-extern int grf_scan_devices(int fd, int timeout, const char *groupid, struct grf_devicelist *devices);
-extern int grf_read_data(int fd, int timeout, const char *deviceid, struct grf_device *device);
+extern int grf_scan_group(int fd, char **groupid);
+extern int grf_scan_devices(int fd, const char *groupid, struct grf_devicelist *devices);
+extern int grf_read_data(int fd, const char *deviceid, struct grf_device *device);
 extern void grf_print_data(struct grf_device *device);
 
-struct ctlparams
-{
-	bool           isinit;
-	char          *dev;
-	int            fd;
-	bool           tty_restore;
-	struct termios tty_attr;
-};
-
-static struct ctlparams params;
-
-static int init_device(const char *dev, int timeout, char **firmware_version)
-{
-	int fd = -1;
-	int ret;
-	
-	printf("Initializing communication at %s...\n", dev);
-
-	/* Setup the exit handler */
-	params.isinit      = true;
-	params.dev         = (char *) dev;
-	params.fd          = -1;
-	params.tty_restore = false;
-	atexit(on_exit_handler);
-	
-	/* Open UART and store the current UART setting to later restore them */
-	fd = grf_uart_open(dev);
-	if (fd < 0)
-	{
-		fprintf(stderr, "ERROR: Opening device %s failed: %s\n", dev, strerror(errno));
-		exit(EXIT_FAILURE);
-	}
-	params.fd = fd;
-	tcgetattr(fd, &params.tty_attr);
-	params.tty_restore = true;
-	ret = grf_uart_setup(fd);
-	if (ret)
-	{
-		fprintf(stderr, "ERROR: Setting up UART device %s failed: %s\n", dev, strerror(ret));
-		exit(EXIT_FAILURE);
-	}
-
-	/* Set the timeout for request / response communication */
-	grf_uart_set_timeout(fd, timeout);
-
-	/* Initialize Gira RF module */
-	ret = grf_comm_init(fd, firmware_version);
-	if (ret)
-	{
-		fprintf(stderr, "ERROR: Initializing device %s failed: %s\n", dev, strerror(ret));
-		if (firmware_version && *firmware_version)
-			free(*firmware_version);
-		exit(EXIT_FAILURE);
-	}
-
-	return fd;
-}
-
-static void destroy_device(void)
-{
-	if (!params.isinit)
-		return;
-
-	printf("Closing communication at device %s...\n", params.dev);
-
-	/* Free the device name */
-	if (params.dev)
-		free(params.dev);
-
-	/* Restore UART settings */
-	if (params.tty_restore)
-		tcsetattr(params.fd, TCSANOW, &(params.tty_attr));
-
-	/* Close UART */
-	if (params.fd > 0)
-		grf_uart_close(params.fd);
-
-	/* Make the exit handler do nothing */
-	params.isinit      = false;
-	params.fd          = -1;
-	params.tty_restore = false;
-}
+static struct grf_radio radio;
 
 static void on_exit_handler(void)
 {
-	destroy_device();
+	grf_radio_exit(&radio);
 }
 
 static void usage(const char *progname)
@@ -119,7 +36,7 @@ static void usage(const char *progname)
 	printf("\n");
 	printf("  options:\n"
 		"    -d  --device <device>                    use the given device (default: %s)\n"
-		"    -t  --timeout <timeout>                  use the timeout while executing the command (default: %d)\n"
+		"    -t  --timeout <timeout>                  use the timeout in seconds while executing the command (default: %d)\n"
 		"    -v  --verbose <level>                    set debug level to one of {error, warn, info, debug, debugio}\n"
 		"    -h  --help                               show this help\n",
 		GRF_DEFAULT_DEVICE, GRF_DEFAULT_TIMEOUT
@@ -177,14 +94,7 @@ int main(int argc, char **argv)
 				break;
 			case 't':
 				timeout = atoi(optarg);
-				if (timeout > 255)
-				{
-					/* FIXME: Currently only unsigned char timeouts are supported! */
-					fprintf(stderr, "ERROR: Currently the TTY layer only supports timeouts up to 25.5 seconds (unsigned char)!\n");
-					fprintf(stderr, "       Please reduce your timout value below 255 until a proper timeout handling is implemented!\n");
-					exit(EXIT_FAILURE);
-				}
-				printf("Using a %.1f second timeout...\n", 0.1*timeout);
+				printf("Using a %u second timeout...\n", timeout);
 				break;
 			case 'v':
 				printf("Using log-level %s...\n", optarg);
@@ -228,32 +138,40 @@ int main(int argc, char **argv)
 	/* Adjust the log-level to the given level */
 	grf_logging_setlevel(loglevel);
 
-	/* Parse the command and do the processing */
+	/* Parse the command and handle all commands that do not require the radio to be set up */
 	cmd = argv[optind];
 	if(strcasecmp(cmd, "show-version") == 0)
 	{
 		printf("grfctl version %s\n", GRF_VERSION);
-	} else if(strcasecmp(cmd, "show-firmware-version") == 0)
+		exit(EXIT_SUCCESS);
+	}
+
+	/* Setup the radio and register the on exit handler in case we die suddenly */
+	memset(&radio, 0, sizeof(struct grf_radio));
+	radio.is_initialized = false;
+	atexit(on_exit_handler);
+	ret = grf_radio_init(&radio, dev, timeout);
+	if (ret)
 	{
-		char *firmware_version = NULL;
-		
-		init_device(dev, timeout, &firmware_version);
-		if (firmware_version)
-			printf("Firmware version: %s\n", firmware_version);
-		free(firmware_version);
-		destroy_device();
-	} else if(strcasecmp(cmd, "scan-groups") == 0)
+		fprintf(stderr, "ERROR: Initialization of radio device failed: %s\n", strerror(ret));
+		exit(EXIT_FAILURE);
+	}
+
+	/* Parse the remaining command that require the radio */
+	if(strcasecmp(cmd, "show-firmware-version") == 0)
+	{
+		printf("Firmware version: %s\n", radio.firmware_version);
+	}
+	else if(strcasecmp(cmd, "scan-groups") == 0)
 	{
 		char *groupid;
 		
-		init_device(dev, timeout, NULL);
-		ret = grf_scan_group(params.fd, GRF_TIMEOUT_SCAN, &groupid);
+		ret = grf_scan_group(radio.fd, &groupid);
 		if (ret)
 		{
 			fprintf(stderr, "ERROR: Scanning group IDs failed: %s\n", strerror(ret));
 			exit(EXIT_FAILURE);
 		}
-		destroy_device();
 
 		/* Output the result of the scan */
 		if (!groupid)
@@ -261,20 +179,19 @@ int main(int argc, char **argv)
 
 		printf("Found the following groups:\n");
 		printf("    %s\n", groupid);
-	} else if(strcasecmp(cmd, "scan-devices") == 0)
+	}
+	else if(strcasecmp(cmd, "scan-devices") == 0)
 	{
 		const char            *groupid = get_cmd_param(argv, argc, optind);
 		struct grf_devicelist  devices;
 		int                    i;
 		
-		init_device(dev, timeout, NULL);
-		ret = grf_scan_devices(params.fd, GRF_TIMEOUT_SCAN, groupid, &devices);
+		ret = grf_scan_devices(radio.fd, groupid, &devices);
 		if (ret)
 		{
 			fprintf(stderr, "ERROR: Scanning devices of group %s failed: %s\n", groupid, strerror(ret));
 			exit(EXIT_FAILURE);
 		}
-		destroy_device();
 
 		/* Output the result of the scan */
 		if (devices.len < 1)
@@ -285,25 +202,34 @@ int main(int argc, char **argv)
 		{
 			printf("    %s\n", devices.devices[i].id);
 		}
-	} else if(strcasecmp(cmd, "request-data") == 0)
+	}
+	else if(strcasecmp(cmd, "request-data") == 0)
 	{
 		const char            *deviceid = get_cmd_param(argv, argc, optind);
 		struct grf_device      device;
 
-		init_device(dev, timeout, NULL);
-		ret = grf_read_data(params.fd, timeout, deviceid, &device);
+		ret = grf_read_data(radio.fd, deviceid, &device);
 		if (ret)
 		{
 			fprintf(stderr, "ERROR: Requesting data of device %s failed: %s\n", deviceid, strerror(ret));
 			exit(EXIT_FAILURE);
 		}
-		destroy_device();
 
 		/* Output the result of the request */
 		printf("Data of %s:\n", deviceid);
 		grf_print_data(&device);
-	} else {
+	}
+	else
+	{
 		fprintf(stderr, "Unknown command \"%s\"\n", cmd);
+		exit(EXIT_FAILURE);
+	}
+
+	/* Close the radio */
+	ret = grf_radio_exit(&radio);
+	if (ret)
+	{
+		fprintf(stderr, "ERROR: Closing the radio device failed: %s\n", strerror(ret));
 		exit(EXIT_FAILURE);
 	}
 

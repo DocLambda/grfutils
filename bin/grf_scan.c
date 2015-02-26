@@ -10,13 +10,10 @@
 
 #include "grf_logging.h"
 
-int grf_scan_group(int fd, int timeout, char **groupid)
+int grf_scan_group(int fd, char **groupid)
 {
 	/* Initialize the groupid */
 	*groupid = NULL;
-
-	/* Set the timeout for scanning devices */
-	grf_uart_set_timeout(fd, timeout);
 
 	/* Scan for group IDs */
 	printf("Scanning for group...\n");
@@ -28,13 +25,8 @@ int grf_scan_group(int fd, int timeout, char **groupid)
 	return grf_comm_scan_groups(fd, groupid);
 }
 
-int grf_scan_devices(int fd, int timeout, const char *groupid, struct grf_devicelist *devices)
+int grf_scan_devices(int fd, const char *groupid, struct grf_devicelist *devices)
 {
-	/* Initialize the variables */
-
-	/* Set the timeout for scanning devices */
-	grf_uart_set_timeout(fd, timeout);
-
 	/* Scan for devices */
 	printf("Scanning for devices of group %s...\n", groupid);
 

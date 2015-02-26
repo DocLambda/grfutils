@@ -44,13 +44,8 @@ void grf_print_data(struct grf_device *device)
 }
 
 
-int grf_read_data(int fd, int timeout, const char *deviceid, struct grf_device *device)
+int grf_read_data(int fd, const char *deviceid, struct grf_device *device)
 {
-	/* Initialize the variables */
-
-	/* Set the timeout for scanning devices */
-	grf_uart_set_timeout(fd, timeout);
-
 	/* Scan for devices */
 	printf("Requesting data of device %s...\n", deviceid);
 
