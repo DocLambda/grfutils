@@ -222,8 +222,6 @@ static int send_request_devices(struct grf_radio *radio, const char *group, stru
 static int send_start_diagnosis(struct grf_radio *radio, const char *deviceid)
 {
 	char    msg[MSGBUFSIZE];
-	char    data[MSGBUFSIZE];
-	int     datatype;
 	size_t  len;
 
 	/* Request data acquisition:
@@ -244,8 +242,7 @@ static int send_start_diagnosis(struct grf_radio *radio, const char *deviceid)
 	RETURN_ON_ERROR(grf_radio_read(radio, msg, &len, MSGBUFSIZE));
 	if (msg_is_timeout(msg, len))
 		return ETIMEDOUT;
-	datatype = get_data(msg, len, data);
-	if (datatype != GRF_DATATYPE_REC)
+	if (!msg_is_rec(msg, len))
 		return EIO;
 
 	/* Expect the Done answer */
