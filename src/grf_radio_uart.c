@@ -201,19 +201,29 @@ int grf_radio_exit(struct grf_radio *radio)
 /*****************************************************************************/
 int grf_radio_read(struct grf_radio *radio, char *message, size_t *len)
 {
-	char c;
-	bool msgstarted = false;
-	bool stop       = false;
-	int  retval     = ETIMEDOUT;
+	char    c;
+	bool    msgstarted = false;
+	bool    stop       = false;
+	int     repeats    = radio->timeout_repeats;
+	ssize_t count;
+	int     retval     = ETIMEDOUT;
 
 	/* Clear message buffer */
 	/* FIXME: Use a common define for 255 in both uart and caller side. */
 	memset(message, '\0', 255 * sizeof(char));
 	*len = 0;
 
-	/* Wait for begin of message */
-	while (read(radio->fd, &c, 1*sizeof(char)) > 0)
+	/* Wait for data and respect the retries calculated to arrive at the
+	 * user specified timeout.
+	 */
+	errno = 0;
+	while ((count = read(radio->fd, &c, 1*sizeof(char))) > 0 || (!errno && --repeats > 0))
 	{
+		if (count < 1)
+		{
+			grf_logging_log(GRF_LOGGING_DEBUG, "read: No data received. Retrying %d more time(s)...", repeats);
+			continue;
+		}
 		grf_logging_log(GRF_LOGGING_DEBUG_IO, "read: 0x%02x", c);
 
 		/* Maintain state machine for parsing */
@@ -309,7 +319,7 @@ int grf_radio_write(struct grf_radio *radio, const char *message, size_t len)
 	do {
 		count = write(radio->fd, message, len*sizeof(char));
 		if (count < 0)
-		return errno;
+			return errno;
 		written += count;
 	} while (written < len);
 
