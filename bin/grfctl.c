@@ -74,8 +74,8 @@ static int init_device(const char *dev, int timeout, char **firmware_version)
 	if (ret)
 	{
 		fprintf(stderr, "ERROR: Initializing device %s failed: %s\n", dev, strerror(ret));
-		if (firmware_version)
-			free(firmware_version);
+		if (firmware_version && *firmware_version)
+			free(*firmware_version);
 		exit(EXIT_FAILURE);
 	}
 
