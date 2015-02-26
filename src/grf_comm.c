@@ -5,6 +5,8 @@
 #include <errno.h>
 #include <string.h>
 
+#include <math.h>
+
 #include "grf.h"
 #include "grf_logging.h"
 
@@ -295,9 +297,11 @@ static int send_data_request(int fd, const char *deviceid, uint8_t reqtype)
 
 static int recv_data(int fd, struct grf_device *device)
 {
-	char    msg[255];
-	char    data[255];
-	size_t  len;
+	char      msg[255];
+	char      data[255];
+	size_t    len;
+	uint32_t  key;
+	uint32_t  value;
 
 	while (true)
 	{
@@ -308,7 +312,89 @@ static int recv_data(int fd, struct grf_device *device)
 			return EIO;
 		grf_logging_dbg("    data: %s", data);
 
-		/* TODO: Interprete the received data.*/
+		/* Interprete the received data.*/
+		sscanf(data, "%04x:%08x", &key, &value);
+		switch(key)
+		{
+			case 0x0001:	/* Serial number */
+				device->serial_number = value;
+				break;
+			case 0x0002:	/* FIXME: Unknown */
+				device->unknown_02 = value;
+				break;
+			case 0x0003:	/* Operation time */
+				device->operation_time = (float)value * 0.25f;
+				break;
+			case 0x0004:	/* Smoke chamber state */
+				device->smoke_chamber_value = (value >> 16) & 0xFFFF; /* FIXME: unknown */
+				device->local_smoke_alerts  = (value >> 8)  & 0xFF;
+				device->smoke_chamber_pollution = value & 0xFF;
+				break;
+			case 0x0005:	/* Battery and temperature */
+				device->battery_voltage = (float)((value >> 16) & 0xFFFF) * 9.184f / 500.0f;
+				device->temperature1    = (float)((value >> 8)  & 0xFF) * 0.50f - 20.0f;
+				device->temperature2    = (float)(value         & 0xFF) * 0.50f - 20.0f;
+				break;
+			case 0x0006:	/* Alert count */
+				device->local_temperature_alerts = (value >> 24) & 0xFF;
+				device->local_test_alerts        = (value >> 16) & 0xFF;
+				device->remote_cable_alerts      = (value >> 8)  & 0xFF;
+				device->remote_radio_alerts      =  value        & 0xFF;
+				break;
+			case 0x0007:	/* Remote test alert count */
+				/* FIXME: upper two bytes unknown. Always zero? */
+				device->remote_cable_test_alerts = (value >> 8)  & 0xFF;
+				device->remote_radio_test_alerts =  value        & 0xFF;
+				break;
+			case 0x0014:	/* FIXME: Unknown register */
+			case 0x0015:	/* FIXME: Unknown register */
+			case 0x0016:	/* FIXME: Unknown register */
+			case 0x0017:	/* FIXME: Unknown register */
+			case 0x0018:	/* FIXME: Unknown register */
+			case 0x0019:	/* FIXME: Unknown register */
+			case 0x001A:	/* FIXME: Unknown register */
+			case 0x001B:	/* FIXME: Unknown register */
+			case 0x001C:	/* FIXME: Unknown register */
+			case 0x001D:	/* FIXME: Unknown register */
+			case 0x001E:	/* FIXME: Unknown register */
+			case 0x001F:	/* FIXME: Unknown register */
+			case 0x0020:	/* FIXME: Unknown register */
+			case 0x0021:	/* FIXME: Unknown register */
+			case 0x0022:	/* FIXME: Unknown register */
+			case 0x0023:	/* FIXME: Unknown register */
+			case 0x0024:	/* FIXME: Unknown register */
+			case 0x0025:	/* FIXME: Unknown register */
+			case 0x0026:	/* FIXME: Unknown register */
+			case 0x0027:	/* FIXME: Unknown register */
+			case 0x0028:	/* FIXME: Unknown register */
+			case 0x0029:	/* FIXME: Unknown register */
+			case 0x002A:	/* FIXME: Unknown register */
+			case 0x002B:	/* FIXME: Unknown register */
+			case 0x002C:	/* FIXME: Unknown register */
+			case 0x002D:	/* FIXME: Unknown register */
+			case 0x002E:	/* FIXME: Unknown register */
+			case 0x002F:	/* FIXME: Unknown register */
+			case 0x0030:	/* FIXME: Unknown register */
+			case 0x0031:	/* FIXME: Unknown register */
+			case 0x0032:	/* FIXME: Unknown register */
+			case 0x0033:	/* FIXME: Unknown register */
+			case 0x0034:	/* FIXME: Unknown register */
+			case 0x0035:	/* FIXME: Unknown register */
+			case 0x0036:	/* FIXME: Unknown register */
+			case 0x0037:	/* FIXME: Unknown register */
+			case 0x0038:	/* FIXME: Unknown register */
+			case 0x0039:	/* FIXME: Unknown register */
+			case 0x003A:	/* FIXME: Unknown register */
+			case 0x003B:	/* FIXME: Unknown register */
+				device->unknown_registers[GRF_UNKNOWN_REGISTER_INDEX(key)] = value;
+				break;
+			case 0x0064:	/* FIXME: Unknown */
+				device->unknown_64 = value;
+				break;
+			default:
+				grf_logging_dbg("    UNKNOWN KEY:  key = %u    value = %u", key, value);
+				break;
+		}
 	}
 
 	return 0;
