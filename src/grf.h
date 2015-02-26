@@ -52,7 +52,7 @@ struct grf_device
 	uint32_t serial_number;
 	float    operation_time;          /* seconds */
 	uint8_t  smoke_chamber_pollution; /* FIXME: percent? */
-	float    battery_voltage;         /* FIXME: volt? */
+	float    battery_voltage;         /* Volt */
 	float    temperature1;            /* degree celcius */
 	float    temperature2;            /* degree celcius */
 	/* Alerts */
