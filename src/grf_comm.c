@@ -220,6 +220,45 @@ static int send_request_devices(int fd, const char *group, struct grf_devicelist
 	return 0;
 }
 
+static int send_start_diagnosis(int fd, const char *deviceid)
+{
+	char    msg[255];
+	char    data[255];
+	int     datatype;
+	size_t  len;
+
+	/* Request data acquisition:
+	 *    <STX>SD:$DEVICEID<ETX>	      -->
+	 *                                   <-- <ACK>
+	 *                                   <-- <STX>REC<ETX>
+	 *                                   <-- <STX>Done<ETX>
+	 */
+	len = sprintf(msg, GRF_REQUEST_DIAG, GRF_STX, deviceid, GRF_ETX);
+	RETURN_ON_ERROR(grf_uart_write_message(fd, msg, len));
+	RETURN_ON_ERROR(grf_uart_read_message(fd, msg, &len));
+	if (msg_is_timeout(msg, len))
+		return ETIMEDOUT;
+	if (!msg_is_ack(msg, len))
+		return EIO;
+
+	/* Expect the REC answer */
+	RETURN_ON_ERROR(grf_uart_read_message(fd, msg, &len));
+	if (msg_is_timeout(msg, len))
+		return ETIMEDOUT;
+	datatype = get_data(msg, len, data);
+	if (datatype != GRF_DATATYPE_REC)
+		return EIO;
+
+	/* Expect the Done answer */
+	RETURN_ON_ERROR(grf_uart_read_message(fd, msg, &len));
+	if (msg_is_timeout(msg, len))
+		return ETIMEDOUT;
+	if (!msg_is_done(msg, len))
+		return EIO;
+
+	return 0;
+}
+
 static int send_data_request(int fd, const char *deviceid, uint8_t reqtype)
 {
 	char    msg[255];
@@ -330,6 +369,9 @@ int grf_comm_scan_devices(int fd, const char *group, struct grf_devicelist *devi
 /*****************************************************************************/
 int grf_comm_read_data(int fd, const char *deviceid, struct grf_device *device)
 {
+	/* Variable declaration */
+	int retval;
+
 	/* Initialize the device data */
 	device->id = strdup(deviceid);
 
@@ -339,6 +381,12 @@ int grf_comm_read_data(int fd, const char *deviceid, struct grf_device *device)
 	 *    <STX>DA:$DEVICEID:05<ETX> -->
 	 *                              <-- <ACK>
 	 *                              <-- <STX>Done<ETX>
+	 *  in case we receive a TIMEOUT we need to start the diagnosis mode first:
+	 *    <STX>SD:$DEVICEID<ETX>    -->
+	 *                              <-- <ACK>
+	 *                              <-- <STX>REC<ETX>
+	 *                              <-- <STX>Done<ETX>
+	 *  end
 	 *    <STX>DA:$DEVICEID:01<ETX> -->
 	 *                              <-- <ACK>
 	 *                              <-- DATA
@@ -347,7 +395,10 @@ int grf_comm_read_data(int fd, const char *deviceid, struct grf_device *device)
 	 *                              <-- <STX>Done<ETX>
 	 */
 	RETURN_ON_ERROR(send_init_sequence(fd));
-	RETURN_ON_ERROR(send_data_request(fd, deviceid, GRF_DA_TYPE_START));
+	retval = send_data_request(fd, deviceid, GRF_DA_TYPE_START);
+	if (retval == ETIMEDOUT)
+		retval = send_start_diagnosis(fd, deviceid);
+	RETURN_ON_ERROR(retval);
 	RETURN_ON_ERROR(send_data_request(fd, deviceid, GRF_DA_TYPE_SEND));
 	RETURN_ON_ERROR(recv_data(fd, device));
 	RETURN_ON_ERROR(send_data_request(fd, deviceid, GRF_DA_TYPE_STOP));
