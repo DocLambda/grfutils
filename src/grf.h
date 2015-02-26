@@ -4,6 +4,8 @@
 #include <time.h>
 #include <stdint.h>
 
+#include "grf_radio.h"
+
 #define RETURN_ON_ERROR(__func__) \
 {\
     int __retval__ = (__func__);\
@@ -11,15 +13,6 @@
 }
 
 #define GRF_MAXDEVICES          40                  /* Maximum number of devices in one group */
-
-#define GRF_BAUDRATE            B9600
-
-#define GRF_NUL                 0x00
-#define GRF_STX                 0x02
-#define GRF_ETX                 0x03
-#define GRF_CONT                0x0a
-#define GRF_ACK                 0x06
-#define GRF_NAK                 0x15
 
 #define GRF_INIT_TEST           "%c01TESTA1%c"      /* Set RF module to command mode */
 #define GRF_INIT_SV             "%cSV%c"            /* Request sending the firmware version */
@@ -82,12 +75,6 @@ struct grf_devicelist
 	struct grf_device  devices[GRF_MAXDEVICES];
 	uint8_t            len;
 };
-
-/* UART functions */
-int  grf_uart_open(const char *dev);
-int  grf_uart_setup(int fd);
-void grf_uart_close(int fd);
-void grf_uart_set_timeout(int fd, unsigned int timeout);
 
 /* Communication functions */
 int grf_comm_init(int fd, char **firmware_version);

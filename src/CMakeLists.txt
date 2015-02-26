@@ -6,4 +6,4 @@ add_library(grf SHARED ${GRFUTILS_SOURCES})
 
 install(TARGETS grf LIBRARY DESTINATION lib)
 
-install (FILES grf.h DESTINATION include)
+install(FILES grf.h grf_radio.h DESTINATION include)

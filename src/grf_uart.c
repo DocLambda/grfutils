@@ -9,7 +9,7 @@
 #include <fcntl.h>
 
 #include "grf.h"
-
+#include "grf_radio.h"
 #include "grf_logging.h"
 
 /*****************************************************************************/

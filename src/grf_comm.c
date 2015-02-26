@@ -8,12 +8,8 @@
 #include <math.h>
 
 #include "grf.h"
+#include "grf_radio.h"
 #include "grf_logging.h"
-
-/* Announce low-level uart read/write functions */
-extern int grf_uart_read_message(int fd, char *message, size_t *len);
-extern int grf_uart_write_message(int fd, const char *message, size_t len);
-extern int grf_uart_write_ctl(int fd, char ctl);
 
 /*****************************************************************************/
 static int get_data(const char *msg, size_t len, char *data)
