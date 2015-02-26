@@ -241,8 +241,8 @@ static int send_data_request(int fd, const char *deviceid, uint8_t reqtype)
 	if (!msg_is_ack(msg, len))
 		return EIO;
 
-	/* Expect the Done answer */
-	if (reqtype != 1)
+	/* Expect the actual data for the send request */
+	if (reqtype != GRF_DA_TYPE_SEND)
 	{
 		RETURN_ON_ERROR(grf_uart_read_message(fd, msg, &len));
 		if (msg_is_timeout(msg, len))
@@ -250,6 +250,7 @@ static int send_data_request(int fd, const char *deviceid, uint8_t reqtype)
 		if (!msg_is_done(msg, len))
 			return EIO;
 	}
+
 	return 0;
 }
 
