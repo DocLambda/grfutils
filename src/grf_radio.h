@@ -31,12 +31,10 @@ struct grf_radio
 };
 
 /* Radio functions */
-int  grf_radio_init(struct grf_radio *radio, const char *dev, unsigned int timeout);
-int  grf_radio_exit(struct grf_radio *radio);
-
-/* UART functions */
-int  grf_uart_read_message(int fd, char *message, size_t *len);
-int  grf_uart_write_message(int fd, const char *message, size_t len);
-int  grf_uart_write_ctl(int fd, char ctl);
+int grf_radio_init(struct grf_radio *radio, const char *dev, unsigned int timeout);
+int grf_radio_exit(struct grf_radio *radio);
+int grf_radio_read(struct grf_radio *radio, char *message, size_t *len);
+int grf_radio_write(struct grf_radio *radio, const char *message, size_t len);
+int grf_radio_write_ctrl(struct grf_radio *radio, char ctrl);
 
 #endif /* __GRF_RADIO_H__ */

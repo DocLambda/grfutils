@@ -44,10 +44,10 @@ void grf_print_data(struct grf_device *device)
 }
 
 
-int grf_read_data(int fd, const char *deviceid, struct grf_device *device)
+int grf_read_data(struct grf_radio *radio, const char *deviceid, struct grf_device *device)
 {
 	/* Scan for devices */
 	printf("Requesting data of device %s...\n", deviceid);
 
-	return grf_comm_read_data(fd, deviceid, device);
+	return grf_comm_read_data(radio, deviceid, device);
 }

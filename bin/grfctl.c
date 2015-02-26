@@ -18,9 +18,9 @@
 
 static void on_exit_handler(void);
 
-extern int grf_scan_group(int fd, char **groupid);
-extern int grf_scan_devices(int fd, const char *groupid, struct grf_devicelist *devices);
-extern int grf_read_data(int fd, const char *deviceid, struct grf_device *device);
+extern int grf_scan_group(struct grf_radio *radio, char **groupid);
+extern int grf_scan_devices(struct grf_radio *radio, const char *groupid, struct grf_devicelist *devices);
+extern int grf_read_data(struct grf_radio *radio, const char *deviceid, struct grf_device *device);
 extern void grf_print_data(struct grf_device *device);
 
 static struct grf_radio radio;
@@ -157,6 +157,14 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
+	/* Initialize Gira RF module */
+	ret = grf_comm_init(&radio);
+	if (ret)
+	{
+		fprintf(stderr, "ERROR: Initializing communication failed: %s\n", strerror(ret));
+		exit(EXIT_FAILURE);
+	}
+
 	/* Parse the remaining command that require the radio */
 	if(strcasecmp(cmd, "show-firmware-version") == 0)
 	{
@@ -166,7 +174,7 @@ int main(int argc, char **argv)
 	{
 		char *groupid;
 		
-		ret = grf_scan_group(radio.fd, &groupid);
+		ret = grf_scan_group(&radio, &groupid);
 		if (ret)
 		{
 			fprintf(stderr, "ERROR: Scanning group IDs failed: %s\n", strerror(ret));
@@ -186,7 +194,7 @@ int main(int argc, char **argv)
 		struct grf_devicelist  devices;
 		int                    i;
 		
-		ret = grf_scan_devices(radio.fd, groupid, &devices);
+		ret = grf_scan_devices(&radio, groupid, &devices);
 		if (ret)
 		{
 			fprintf(stderr, "ERROR: Scanning devices of group %s failed: %s\n", groupid, strerror(ret));
@@ -208,7 +216,7 @@ int main(int argc, char **argv)
 		const char            *deviceid = get_cmd_param(argv, argc, optind);
 		struct grf_device      device;
 
-		ret = grf_read_data(radio.fd, deviceid, &device);
+		ret = grf_read_data(&radio, deviceid, &device);
 		if (ret)
 		{
 			fprintf(stderr, "ERROR: Requesting data of device %s failed: %s\n", deviceid, strerror(ret));

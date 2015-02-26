@@ -101,7 +101,105 @@ static void grf_uart_close(int fd)
 /*****************************************************************************/
 
 /*****************************************************************************/
-int grf_uart_read_message(int fd, char *message, size_t *len)
+int grf_radio_init(struct grf_radio *radio, const char *dev, unsigned int timeout)
+{
+	uint32_t t_user = timeout * 10;
+	uint32_t i;
+	int      ret;
+
+	grf_logging_info("Initializing device %s", dev);
+
+	/* Reset the radio structure */
+	memset(radio, 0, sizeof(struct grf_radio));
+	radio->is_initialized = false;
+
+	/* Copy the given data to the radio */
+	radio->dev          = strdup(dev);
+	radio->timeout_user = t_user;
+
+	/* The TTY layer handles the timeout as unsigned char, thus limiting the
+	 * maximal timeout to 25.5 seconds. We sometimes, especially during
+	 * read-out of devices, require longer timeouts up to 60 seconds.
+	 * Therefore, we have to split the timeout into multiple smaller ones
+	 * and repeat reading.
+	 */
+	if (timeout <= 25)
+	{
+		radio->timeout_tty     = t_user;
+		radio->timeout_repeats = 1;
+	}
+	else
+	{
+		/* Calculate the greatest common divisor between the user specified
+		 * timeout and the maximum timeout of the TTY layer (255). We use
+		 * trial divisions in this case due to the limited number of trials.
+		 * NOTE: This loop is quaranteed to end latest at i=10 due to the
+		 *       multiplication t_user = timeout * 10.
+		 */
+		i = 256;
+		while (t_user % --i != 0);
+		radio->timeout_tty     = i;
+		radio->timeout_repeats = t_user / i;
+	}
+	grf_logging_dbg("init: timeout %u 1/10s --> %u 1/10s * %u", t_user, radio->timeout_tty, radio->timeout_repeats);
+
+	/* Open UART and store the current UART setting to later restore them */
+	radio->fd = grf_uart_open(dev);
+	if (radio->fd < 0)
+	{
+		grf_logging_err("Opening radio device %s failed: %s", dev, strerror(errno));
+		return errno;
+	}
+	tcgetattr(radio->fd, &radio->tty_attr_saved);
+	radio->is_initialized = true;
+
+	/* Setup the port settings to allow communication with the radio. */
+	memcpy(&radio->tty_attr, &radio->tty_attr_saved, sizeof(struct termios));
+	ret = grf_uart_setup(radio->fd);
+	if (ret)
+	{
+		grf_logging_err("Setting up radio device %s failed: %s", dev, strerror(ret));
+		return ret;
+	}
+
+	/* Set the timeout for request / response communication */
+	grf_uart_set_timeout(radio->fd, radio->timeout_tty);
+
+	return 0;
+}
+
+int grf_radio_exit(struct grf_radio *radio)
+{
+	if (!radio->is_initialized)
+		return 0;
+
+	grf_logging_info("Closing communication at device %s", radio->dev);
+
+	/* Clean all remaining data on the device */
+	tcflush(radio->fd, TCIOFLUSH);
+
+	/* Restore UART settings */
+	tcsetattr(radio->fd, TCSANOW, &radio->tty_attr_saved);
+
+	/* Close UART */
+	if (radio->fd > 0)
+		grf_uart_close(radio->fd);
+
+	/* Free the device name */
+	if (radio->dev)
+		free(radio->dev);
+
+	/* Reset the device structure */
+	/* Reset the radio structure */
+	memset(radio, 0, sizeof(struct grf_radio));
+	radio->is_initialized = false;
+
+	return 0;
+}
+/*****************************************************************************/
+
+/*****************************************************************************/
+int grf_radio_read(struct grf_radio *radio, char *message, size_t *len)
 {
 	char c;
 	bool msgstarted = false;
@@ -114,7 +212,7 @@ int grf_uart_read_message(int fd, char *message, size_t *len)
 	*len = 0;
 
 	/* Wait for begin of message */
-	while (read(fd, &c, 1*sizeof(char)) > 0)
+	while (read(radio->fd, &c, 1*sizeof(char)) > 0)
 	{
 		grf_logging_log(GRF_LOGGING_DEBUG_IO, "read: 0x%02x", c);
 
@@ -198,8 +296,10 @@ int grf_uart_read_message(int fd, char *message, size_t *len)
 
 	return retval;
 }
+/*****************************************************************************/
 
-int grf_uart_write_message(int fd, const char *message, size_t len)
+/*****************************************************************************/
+int grf_radio_write(struct grf_radio *radio, const char *message, size_t len)
 {
 	ssize_t count;
 	size_t  written = 0;
@@ -207,128 +307,24 @@ int grf_uart_write_message(int fd, const char *message, size_t len)
 	grf_logging_dbg_hex(message, len, "send: %s", message);
 
 	do {
-		count = write(fd, message, len*sizeof(char));
+		count = write(radio->fd, message, len*sizeof(char));
 		if (count < 0)
 		return errno;
 		written += count;
 	} while (written < len);
 
-	fsync(fd);
+	fsync(radio->fd);
 
 	return 0;
 }
 
-int grf_uart_write_ctl(int fd, char ctl)
+int grf_radio_write_ctrl(struct grf_radio *radio, char ctrl)
 {
-	grf_logging_dbg("sctl: 0x%02x", ctl);
-	if (write(fd, &ctl, sizeof(char)) < 0)
+	grf_logging_dbg("sctl: 0x%02x", ctrl);
+	if (write(radio->fd, &ctrl, sizeof(char)) < 0)
 		return errno;
 
-	return 0;
-}
-/*****************************************************************************/
-
-/*****************************************************************************/
-int grf_radio_init(struct grf_radio *radio, const char *dev, unsigned int timeout)
-{
-	uint32_t t_user = timeout * 10;
-	uint32_t i;
-	int      ret;
-
-	grf_logging_info("Initializing device %s", dev);
-
-	/* Reset the radio structure */
-	memset(radio, 0, sizeof(struct grf_radio));
-	radio->is_initialized = false;
-
-	/* Copy the given data to the radio */
-	radio->dev          = strdup(dev);
-	radio->timeout_user = t_user;
-
-	/* The TTY layer handles the timeout as unsigned char, thus limiting the
-	 * maximal timeout to 25.5 seconds. We sometimes, especially during
-	 * read-out of devices, require longer timeouts up to 60 seconds.
-	 * Therefore, we have to split the timeout into multiple smaller ones
-	 * and repeat reading.
-	 */
-	if (timeout <= 25)
-	{
-		radio->timeout_tty     = t_user;
-		radio->timeout_repeats = 1;
-	}
-	else
-	{
-		/* Calculate the greatest common divisor between the user specified
-		 * timeout and the maximum timeout of the TTY layer (255). We use
-		 * trial divisions in this case due to the limited number of trials.
-		 * NOTE: This loop is quaranteed to end latest at i=10 due to the
-		 *       multiplication t_user = timeout * 10.
-		 */
-		i = 256;
-		while (t_user % --i != 0);
-		radio->timeout_tty     = i;
-		radio->timeout_repeats = t_user / i;
-	}
-	grf_logging_dbg("init: timeout %u 1/10s --> %u 1/10s * %u", t_user, radio->timeout_tty, radio->timeout_repeats);
-
-	/* Open UART and store the current UART setting to later restore them */
-	radio->fd = grf_uart_open(dev);
-	if (radio->fd < 0)
-	{
-		grf_logging_err("Opening radio device %s failed: %s", dev, strerror(errno));
-		return errno;
-	}
-	tcgetattr(radio->fd, &radio->tty_attr_saved);
-	radio->is_initialized = true;
-
-	/* Setup the port settings to allow communication with the radio. */
-	memcpy(&radio->tty_attr, &radio->tty_attr_saved, sizeof(struct termios));
-	ret = grf_uart_setup(radio->fd);
-	if (ret)
-	{
-		grf_logging_err("Setting up radio device %s failed: %s", dev, strerror(ret));
-		return ret;
-	}
-
-	/* Set the timeout for request / response communication */
-	grf_uart_set_timeout(radio->fd, radio->timeout_tty);
-
-	/* Initialize Gira RF module */
-	ret = grf_comm_init(radio->fd, &radio->firmware_version);
-	if (ret)
-	{
-		grf_logging_err("Initializing device %s failed: %s", dev, strerror(ret));
-		return ret;
-	}
-
-	return 0;
-}
-
-int grf_radio_exit(struct grf_radio *radio)
-{
-	if (!radio->is_initialized)
-		return 0;
-
-	grf_logging_info("Closing communication at device %s", radio->dev);
-
-	/* Clean all remaining data on the device */
-	tcflush(radio->fd, TCIOFLUSH);
-
-	/* Restore UART settings */
-	tcsetattr(radio->fd, TCSANOW, &radio->tty_attr_saved);
-
-	/* Close UART */
-	if (radio->fd > 0)
-		grf_uart_close(radio->fd);
-
-	/* Free the device name */
-	if (radio->dev)
-		free(radio->dev);
-
-	/* Reset the device structure */
-	/* Reset the radio structure */
-	memset(radio, 0, sizeof(struct grf_radio));
-	radio->is_initialized = false;
+	fsync(radio->fd);
 
 	return 0;
 }

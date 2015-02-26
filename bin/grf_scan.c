@@ -10,7 +10,7 @@
 
 #include "grf_logging.h"
 
-int grf_scan_group(int fd, char **groupid)
+int grf_scan_group(struct grf_radio *radio, char **groupid)
 {
 	/* Initialize the groupid */
 	*groupid = NULL;
@@ -22,13 +22,13 @@ int grf_scan_group(int fd, char **groupid)
 		"    flashes once per second. Afterwards press the smoke detector\n"
 		"    button until you hear a beep sound!\n");
 
-	return grf_comm_scan_groups(fd, groupid);
+	return grf_comm_scan_groups(radio, groupid);
 }
 
-int grf_scan_devices(int fd, const char *groupid, struct grf_devicelist *devices)
+int grf_scan_devices(struct grf_radio *radio, const char *groupid, struct grf_devicelist *devices)
 {
 	/* Scan for devices */
 	printf("Scanning for devices of group %s...\n", groupid);
 
-	return grf_comm_scan_devices(fd, groupid, devices);
+	return grf_comm_scan_devices(radio, groupid, devices);
 }
