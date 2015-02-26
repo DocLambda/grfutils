@@ -176,6 +176,13 @@ int main(int argc, char **argv)
 				break;
 			case 't':
 				timeout = atoi(optarg);
+				if (timeout > 255)
+				{
+					/* FIXME: Currently only unsigned char timeouts are supported! */
+					fprintf(stderr, "ERROR: Currently the TTY layer only supports timeouts up to 25.5 seconds (unsigned char)!\n");
+					fprintf(stderr, "       Please reduce your timout value below 255 until a proper timeout handling is implemented!\n");
+					exit(EXIT_FAILURE);
+				}
 				printf("Using a %.1f second timeout...\n", 0.1*timeout);
 				break;
 			case 'v':
