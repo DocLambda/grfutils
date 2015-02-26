@@ -1,0 +1,44 @@
+[10/09/2014 22:14:53] - Open port COM1 (C:\Program Files (x86)\GIRA\RWM Diagnosetool\RWM_Diagnose.exe)	
+	
+[10/09/2014 22:14:53] Written data	
+    00 02 30 31 54 45 53 54 41 31 03                  ..01TESTA1.     	
+[10/09/2014 22:14:53] Read data	
+    06                                                .               	
+[10/09/2014 22:14:53] Written data	
+    02 53 56 03                                       .SV.            	
+[10/09/2014 22:14:53] Read data	
+    02                                                .               	
+[10/09/2014 22:14:54] Read data	
+    47 49 5f 52 4d 5f 56 30 30 2e 37 30 03            GI_RM_V00.70.   	
+[10/09/2014 22:14:54] - Close port COM1	
+	
+[10/09/2014 22:14:54] - Open port COM1 (C:\Program Files (x86)\GIRA\RWM Diagnosetool\RWM_Diagnose.exe)	
+	
+[10/09/2014 22:15:00] Written data	
+    00 02 30 31 54 45 53 54 41 31 03                  ..01TESTA1.     	
+[10/09/2014 22:15:00] Read data	
+    06                                                .               	
+[10/09/2014 22:15:00] Written data	
+    02 47 41 03                                       .GA.            	
+[10/09/2014 22:15:00] Read data	
+    06                                                .               	
+[10/09/2014 22:15:35] Read data	
+    02 42 31 44                                       .B1D            	
+[10/09/2014 22:15:35] Read data	
+    42 03                                             B.              	
+[10/09/2014 22:15:44] Written data	
+    00 02 30 31 54 45 53 54 41 31 03                  ..01TESTA1.     	
+[10/09/2014 22:15:44] Read data	
+    06                                                .               	
+[10/09/2014 22:15:44] Written data	
+    02 47 44 3a 42 31 44 42 03                        .GD:B1DB.       	
+[10/09/2014 22:15:44] Read data	
+    06                                                .               	
+[10/09/2014 22:16:21] Read data	
+    02 52 45 43 03                                    .REC.           	
+[10/09/2014 22:16:44] Read data	
+    02 42 31 44 42 03                                 .B1DB.          	
+[10/09/2014 22:17:01] Read data	
+    02 54 69 6d 65 6f 75                              .Timeou         	
+[10/09/2014 22:17:01] Read data	
+    74 03                                             t.              	
