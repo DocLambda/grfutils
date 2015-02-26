@@ -33,7 +33,7 @@ struct grf_radio
 /* Radio functions */
 int grf_radio_init(struct grf_radio *radio, const char *dev, unsigned int timeout);
 int grf_radio_exit(struct grf_radio *radio);
-int grf_radio_read(struct grf_radio *radio, char *message, size_t *len);
+int grf_radio_read(struct grf_radio *radio, char *message, size_t *len, size_t size);
 int grf_radio_write(struct grf_radio *radio, const char *message, size_t len);
 int grf_radio_write_ctrl(struct grf_radio *radio, char ctrl);
 

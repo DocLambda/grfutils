@@ -11,6 +11,8 @@
 #include "grf_radio.h"
 #include "grf_logging.h"
 
+#define MSGBUFSIZE		255
+
 /*****************************************************************************/
 static int get_data(const char *msg, size_t len, char *data)
 {
@@ -96,7 +98,7 @@ static bool msg_is_rec(char *msg, size_t len)
 /*****************************************************************************/
 static int send_init_sequence(struct grf_radio *radio)
 {
-	char    msg[255];
+	char    msg[MSGBUFSIZE];
 	size_t  len;
 
 	/* Write the initialization sequence:
@@ -106,7 +108,7 @@ static int send_init_sequence(struct grf_radio *radio)
 	RETURN_ON_ERROR(grf_radio_write_ctrl(radio, GRF_NUL));
 	len = sprintf(msg, GRF_INIT_TEST, GRF_STX, GRF_ETX);
 	RETURN_ON_ERROR(grf_radio_write(radio, msg, len));
-	RETURN_ON_ERROR(grf_radio_read(radio, msg, &len));
+	RETURN_ON_ERROR(grf_radio_read(radio, msg, &len, MSGBUFSIZE));
 	if (msg_is_timeout(msg, len))
 		return ETIMEDOUT;
 	if (!msg_is_ack(msg, len))
@@ -117,8 +119,8 @@ static int send_init_sequence(struct grf_radio *radio)
 
 static int send_request_firmware_version(struct grf_radio *radio)
 {
-	char    msg[255];
-	char    data[255];
+	char    msg[MSGBUFSIZE];
+	char    data[MSGBUFSIZE];
 	size_t  len;
 
 	/* Get firmware version:
@@ -127,7 +129,7 @@ static int send_request_firmware_version(struct grf_radio *radio)
 	 */
 	len = sprintf(msg, GRF_INIT_SV, GRF_STX, GRF_ETX);
 	RETURN_ON_ERROR(grf_radio_write(radio, msg, len));
-	RETURN_ON_ERROR(grf_radio_read(radio, msg, &len));
+	RETURN_ON_ERROR(grf_radio_read(radio, msg, &len, MSGBUFSIZE));
 	if (msg_is_timeout(msg, len))
 		return ETIMEDOUT;
 	if (get_data(msg, len, data) != GRF_DATATYPE_VERSION)
@@ -140,8 +142,8 @@ static int send_request_firmware_version(struct grf_radio *radio)
 
 static int send_request_groups(struct grf_radio *radio, char **groups)
 {
-	char    msg[255];
-	char    data[255];
+	char    msg[MSGBUFSIZE];
+	char    data[MSGBUFSIZE];
 	size_t  len;
 
 	/* Start group scanning:
@@ -151,12 +153,12 @@ static int send_request_groups(struct grf_radio *radio, char **groups)
 	 */
 	len = sprintf(msg, GRF_SCAN_GA, GRF_STX, GRF_ETX);
 	RETURN_ON_ERROR(grf_radio_write(radio, msg, len));
-	RETURN_ON_ERROR(grf_radio_read(radio, msg, &len));
+	RETURN_ON_ERROR(grf_radio_read(radio, msg, &len, MSGBUFSIZE));
 	if (msg_is_timeout(msg, len))
 		return ETIMEDOUT;
 	if (!msg_is_ack(msg, len))
 		return EIO;
-	RETURN_ON_ERROR(grf_radio_read(radio, msg, &len));
+	RETURN_ON_ERROR(grf_radio_read(radio, msg, &len, MSGBUFSIZE));
 	if (msg_is_timeout(msg, len))
 		return ETIMEDOUT;
 	if (get_data(msg, len, data) != GRF_DATATYPE_DATA)
@@ -169,8 +171,8 @@ static int send_request_groups(struct grf_radio *radio, char **groups)
 
 static int send_request_devices(struct grf_radio *radio, const char *group, struct grf_devicelist *devices)
 {
-	char    msg[255];
-	char    data[255];
+	char    msg[MSGBUFSIZE];
+	char    data[MSGBUFSIZE];
 	size_t  len;
 
 	/* Start group scanning:
@@ -181,14 +183,14 @@ static int send_request_devices(struct grf_radio *radio, const char *group, stru
 	 */
 	len = sprintf(msg, GRF_SCAN_GD, GRF_STX, group, GRF_ETX);
 	RETURN_ON_ERROR(grf_radio_write(radio, msg, len));
-	RETURN_ON_ERROR(grf_radio_read(radio, msg, &len));
+	RETURN_ON_ERROR(grf_radio_read(radio, msg, &len, MSGBUFSIZE));
 	if (msg_is_timeout(msg, len))
 		return ETIMEDOUT;
 	if (!msg_is_ack(msg, len))
 		return EIO;
 
 	/* Expect the REC answer */
-	RETURN_ON_ERROR(grf_radio_read(radio, msg, &len));
+	RETURN_ON_ERROR(grf_radio_read(radio, msg, &len, MSGBUFSIZE));
 	if (msg_is_timeout(msg, len))
 		return ETIMEDOUT;
 	if (!msg_is_rec(msg, len))
@@ -198,7 +200,7 @@ static int send_request_devices(struct grf_radio *radio, const char *group, stru
 	devices->len = 0;
 	while (true) 
 	{
-		RETURN_ON_ERROR(grf_radio_read(radio, msg, &len));
+		RETURN_ON_ERROR(grf_radio_read(radio, msg, &len, MSGBUFSIZE));
 		if (msg_is_timeout(msg, len))
 			break;
                 if (get_data(msg, len, data) != GRF_DATATYPE_DATA)
@@ -219,8 +221,8 @@ static int send_request_devices(struct grf_radio *radio, const char *group, stru
 
 static int send_start_diagnosis(struct grf_radio *radio, const char *deviceid)
 {
-	char    msg[255];
-	char    data[255];
+	char    msg[MSGBUFSIZE];
+	char    data[MSGBUFSIZE];
 	int     datatype;
 	size_t  len;
 
@@ -232,14 +234,14 @@ static int send_start_diagnosis(struct grf_radio *radio, const char *deviceid)
 	 */
 	len = sprintf(msg, GRF_REQUEST_DIAG, GRF_STX, deviceid, GRF_ETX);
 	RETURN_ON_ERROR(grf_radio_write(radio, msg, len));
-	RETURN_ON_ERROR(grf_radio_read(radio, msg, &len));
+	RETURN_ON_ERROR(grf_radio_read(radio, msg, &len, MSGBUFSIZE));
 	if (msg_is_timeout(msg, len))
 		return ETIMEDOUT;
 	if (!msg_is_ack(msg, len))
 		return EIO;
 
 	/* Expect the REC answer */
-	RETURN_ON_ERROR(grf_radio_read(radio, msg, &len));
+	RETURN_ON_ERROR(grf_radio_read(radio, msg, &len, MSGBUFSIZE));
 	if (msg_is_timeout(msg, len))
 		return ETIMEDOUT;
 	datatype = get_data(msg, len, data);
@@ -247,7 +249,7 @@ static int send_start_diagnosis(struct grf_radio *radio, const char *deviceid)
 		return EIO;
 
 	/* Expect the Done answer */
-	RETURN_ON_ERROR(grf_radio_read(radio, msg, &len));
+	RETURN_ON_ERROR(grf_radio_read(radio, msg, &len, MSGBUFSIZE));
 	if (msg_is_timeout(msg, len))
 		return ETIMEDOUT;
 	if (!msg_is_done(msg, len))
@@ -258,7 +260,7 @@ static int send_start_diagnosis(struct grf_radio *radio, const char *deviceid)
 
 static int send_data_request(struct grf_radio *radio, const char *deviceid, uint8_t reqtype)
 {
-	char    msg[255];
+	char    msg[MSGBUFSIZE];
 	size_t  len;
 
 	/* Request data acquisition:
@@ -271,7 +273,7 @@ static int send_data_request(struct grf_radio *radio, const char *deviceid, uint
 	 */
 	len = sprintf(msg, GRF_REQUEST_DA_TMPL, GRF_STX, deviceid, reqtype, GRF_ETX);
 	RETURN_ON_ERROR(grf_radio_write(radio, msg, len));
-	RETURN_ON_ERROR(grf_radio_read(radio, msg, &len));
+	RETURN_ON_ERROR(grf_radio_read(radio, msg, &len, MSGBUFSIZE));
 	if (msg_is_timeout(msg, len))
 		return ETIMEDOUT;
 	if (!msg_is_ack(msg, len))
@@ -280,7 +282,7 @@ static int send_data_request(struct grf_radio *radio, const char *deviceid, uint
 	/* Expect the actual data for the send request */
 	if (reqtype != GRF_DA_TYPE_SEND)
 	{
-		RETURN_ON_ERROR(grf_radio_read(radio, msg, &len));
+		RETURN_ON_ERROR(grf_radio_read(radio, msg, &len, MSGBUFSIZE));
 		if (msg_is_timeout(msg, len))
 			return ETIMEDOUT;
 		if (!msg_is_done(msg, len))
@@ -292,15 +294,15 @@ static int send_data_request(struct grf_radio *radio, const char *deviceid, uint
 
 static int recv_data(struct grf_radio *radio, struct grf_device *device)
 {
-	char      msg[255];
-	char      data[255];
+	char      msg[MSGBUFSIZE];
+	char      data[MSGBUFSIZE];
 	size_t    len;
 	uint32_t  key;
 	uint32_t  value;
 
 	while (true)
 	{
-		RETURN_ON_ERROR(grf_radio_read(radio, msg, &len));
+		RETURN_ON_ERROR(grf_radio_read(radio, msg, &len, MSGBUFSIZE));
 		if (msg_is_timeout(msg, len))
 			break;
 		if (get_data(msg, len, data) != GRF_DATATYPE_DATA)

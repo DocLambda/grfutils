@@ -199,7 +199,7 @@ int grf_radio_exit(struct grf_radio *radio)
 /*****************************************************************************/
 
 /*****************************************************************************/
-int grf_radio_read(struct grf_radio *radio, char *message, size_t *len)
+int grf_radio_read(struct grf_radio *radio, char *message, size_t *len, size_t size)
 {
 	char    c;
 	bool    msgstarted = false;
@@ -209,8 +209,7 @@ int grf_radio_read(struct grf_radio *radio, char *message, size_t *len)
 	int     retval     = ETIMEDOUT;
 
 	/* Clear message buffer */
-	/* FIXME: Use a common define for 255 in both uart and caller side. */
-	memset(message, '\0', 255 * sizeof(char));
+	memset(message, '\0', size * sizeof(char));
 	*len = 0;
 
 	/* Wait for data and respect the retries calculated to arrive at the
@@ -292,17 +291,27 @@ int grf_radio_read(struct grf_radio *radio, char *message, size_t *len)
 			}
 		}
 
+		/* Check if we exceed the message buffer size */
+		if (*len >= size)
+		{
+			retval = EMSGSIZE;
+			stop   = true;
+		}
+
+		/* Stop if requested by the state machine */
 		if (stop)
 			break;
 	}
-	
+
 	if (*len < 1)
 	{
 		grf_logging_dbg("recv: %s", "No data received!");
 		retval = errno;
 	}
 	else
+	{
 		grf_logging_dbg_hex(message, *len, "recv: %s (len=%zu)", message, *len);
+	}
 
 	return retval;
 }
