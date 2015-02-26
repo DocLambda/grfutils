@@ -23,6 +23,7 @@ static void on_exit_handler(void);
 extern int grf_scan_group(int fd, int timeout, char **groupid);
 extern int grf_scan_devices(int fd, int timeout, const char *groupid, struct grf_devicelist *devices);
 extern int grf_read_data(int fd, int timeout, const char *deviceid, struct grf_device *device);
+extern void grf_print_data(struct grf_device *device);
 
 struct ctlparams
 {
@@ -298,7 +299,9 @@ int main(int argc, char **argv)
 		}
 		destroy_device();
 
-		/* TODO: Output the result of the request */
+		/* Output the result of the request */
+		printf("Data of %s:\n", deviceid);
+		grf_print_data(&device);
 	} else {
 		fprintf(stderr, "Unknown command \"%s\"\n", cmd);
 		exit(EXIT_FAILURE);
