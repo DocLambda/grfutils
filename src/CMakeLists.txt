@@ -1,4 +1,4 @@
-set(GRFUTILS_SOURCES grf_uart.c grf_comm.c grf_logging.c)
+set(GRFUTILS_SOURCES grf_radio_uart.c grf_comm.c grf_logging.c)
 
 include_directories("${PROJECT_BINARY_DIR}")
 
