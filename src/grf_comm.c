@@ -17,7 +17,7 @@ extern int grf_uart_write_ctl(int fd, char ctl);
 static int get_data(const char *msg, size_t len, char *data)
 {
 	int datatype = GRF_DATATYPE_ERROR;
-	
+
 	/* Clear the data field */
 	memset(data, '\0', len*sizeof(char));
 
@@ -79,6 +79,20 @@ static bool msg_is_timeout(char *msg, size_t len)
 
 	return (get_data(msg, len, data) == GRF_DATATYPE_TIMEOUT);
 }
+
+static bool msg_is_done(char *msg, size_t len)
+{
+	char data[len];
+
+	return (get_data(msg, len, data) == GRF_DATATYPE_DONE);
+}
+
+static bool msg_is_rec(char *msg, size_t len)
+{
+	char data[len];
+
+	return (get_data(msg, len, data) == GRF_DATATYPE_REC);
+}
 /*****************************************************************************/
 
 /*****************************************************************************/
@@ -107,7 +121,6 @@ static int send_request_firmware_version(int fd, char **firmware_version)
 {
 	char    msg[255];
 	char    data[255];
-	int     datatype;
 	size_t  len;
 
 	/* Get firmware version:
@@ -119,8 +132,7 @@ static int send_request_firmware_version(int fd, char **firmware_version)
 	RETURN_ON_ERROR(grf_uart_read_message(fd, msg, &len));
 	if (msg_is_timeout(msg, len))
 		return ETIMEDOUT;
-	datatype = get_data(msg, len, data);
-	if (datatype != GRF_DATATYPE_VERSION)
+	if (get_data(msg, len, data) != GRF_DATATYPE_VERSION)
 		return EIO;
 
 	if (firmware_version)
@@ -133,7 +145,6 @@ static int send_request_groups(int fd, char **groups)
 {
 	char    msg[255];
 	char    data[255];
-	int     datatype;
 	size_t  len;
 
 	/* Start group scanning:
@@ -151,8 +162,7 @@ static int send_request_groups(int fd, char **groups)
 	RETURN_ON_ERROR(grf_uart_read_message(fd, msg, &len));
 	if (msg_is_timeout(msg, len))
 		return ETIMEDOUT;
-	datatype = get_data(msg, len, data);
-	if (datatype != GRF_DATATYPE_DATA)
+	if (get_data(msg, len, data) != GRF_DATATYPE_DATA)
 		return EIO;
 	if (groups)
 		*groups = strdup(data);
@@ -164,7 +174,6 @@ static int send_request_devices(int fd, const char *group, struct grf_devicelist
 {
 	char    msg[255];
 	char    data[255];
-	int     datatype;
 	size_t  len;
 
 	/* Start group scanning:
@@ -185,8 +194,7 @@ static int send_request_devices(int fd, const char *group, struct grf_devicelist
 	RETURN_ON_ERROR(grf_uart_read_message(fd, msg, &len));
 	if (msg_is_timeout(msg, len))
 		return ETIMEDOUT;
-	datatype = get_data(msg, len, data);
-	if (datatype != GRF_DATATYPE_REC)
+	if (!msg_is_rec(msg, len))
 		return EIO;
 
 	/* Receive devices until we get a timout */
@@ -196,8 +204,7 @@ static int send_request_devices(int fd, const char *group, struct grf_devicelist
 		RETURN_ON_ERROR(grf_uart_read_message(fd, msg, &len));
 		if (msg_is_timeout(msg, len))
 			break;
-		datatype = get_data(msg, len, data);
-		if (datatype != GRF_DATATYPE_DATA)
+                if (get_data(msg, len, data) != GRF_DATATYPE_DATA)
 			return EIO;
 		printf("Received device ID: %s\n", data);
 
@@ -216,8 +223,6 @@ static int send_request_devices(int fd, const char *group, struct grf_devicelist
 static int send_data_request(int fd, const char *deviceid, uint8_t reqtype)
 {
 	char    msg[255];
-	char    data[255];
-	int     datatype;
 	size_t  len;
 
 	/* Request data acquisition:
@@ -242,8 +247,7 @@ static int send_data_request(int fd, const char *deviceid, uint8_t reqtype)
 		RETURN_ON_ERROR(grf_uart_read_message(fd, msg, &len));
 		if (msg_is_timeout(msg, len))
 			return ETIMEDOUT;
-		datatype = get_data(msg, len, data);
-		if (datatype != GRF_DATATYPE_DONE)
+		if (!msg_is_done(msg, len))
 			return EIO;
 	}
 	return 0;
@@ -253,7 +257,6 @@ static int recv_data(int fd, struct grf_device *device)
 {
 	char    msg[255];
 	char    data[255];
-	int     datatype;
 	size_t  len;
 
 	while (true)
@@ -261,8 +264,7 @@ static int recv_data(int fd, struct grf_device *device)
 		RETURN_ON_ERROR(grf_uart_read_message(fd, msg, &len));
 		if (msg_is_timeout(msg, len))
 			break;
-		datatype = get_data(msg, len, data);
-		if (datatype != GRF_DATATYPE_DATA)
+		if (get_data(msg, len, data) != GRF_DATATYPE_DATA)
 			return EIO;
 		grf_logging_dbg("    data: %s", data);
 
