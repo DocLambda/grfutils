@@ -342,16 +342,16 @@ int grf_radio_read(struct grf_radio *radio, char *message, size_t *len, size_t s
 int grf_radio_write(struct grf_radio *radio, const char *message, size_t len)
 {
 	ssize_t count;
-	size_t  written = 0;
 
 	grf_logging_dbg_hex(message, len, "send: %s", message);
 
-	do {
+	while(len > 0) {
 		count = write(radio->fd, message, len*sizeof(char));
-		if (count < 0)
-			return errno;
-		written += count;
-	} while (written < len);
+		if (count <= 0)
+			return count ? errno : EAGAIN;
+		message += count;
+		len -= count;
+	}
 
 	fsync(radio->fd);
 
