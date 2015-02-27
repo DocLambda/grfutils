@@ -34,6 +34,8 @@
 #define GRF_ACK                 0x06
 #define GRF_NAK                 0x15
 
+#define grf_radio_is_valid(__r__) ((__r__) && (__r__)->is_initialized && (__r__)->fd >= 0)
+
 /* Data structures */
 struct grf_radio
 {
