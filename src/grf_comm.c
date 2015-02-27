@@ -283,7 +283,7 @@ static int send_request_devices(struct grf_radio *radio, const char *group, stru
 			break;
                 if (get_data(msg, len, data) != GRF_DATATYPE_DATA)
 			return EIO;
-		printf("Received device ID: %s\n", data);
+		grf_logging_dbg("Received device ID: %s", data);
 
 		/* Add device to the device array and set the update
 		 * time to invalid (-1) to mark that the device was
