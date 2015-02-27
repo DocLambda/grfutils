@@ -43,6 +43,7 @@ extern int grf_scan_group(struct grf_radio *radio, char **groupid);
 extern int grf_scan_devices(struct grf_radio *radio, const char *groupid, struct grf_devicelist *devices);
 extern int grf_read_data(struct grf_radio *radio, const char *deviceid, struct grf_device *device);
 extern void grf_print_data(struct grf_device *device);
+extern int grf_switch_signal(struct grf_radio *radio, const char *deviceid, bool on);
 
 static struct grf_radio radio;
 
@@ -69,6 +70,8 @@ static void usage(const char *progname)
 		"    scan-groups                              scan for detector groups\n"
 		"    scan-devices <group>                     scan for all devices in the given group\n"
 		"    request-data <device>                    read the data of the given device\n"
+		"    activate-signal <device>                 activate the accustic signal of the given device\n"
+		"    deactivate-signal <device>               deactivate the accustic signal of the given device\n"
 		);
 	printf("\n");
 	
@@ -247,6 +250,28 @@ int main(int argc, char **argv)
 		/* Output the result of the request */
 		printf("Data of %s:\n", deviceid);
 		grf_print_data(&device);
+	}
+	else if(strcasecmp(cmd, "activate-signal") == 0)
+	{
+		const char *deviceid = get_cmd_param(argv, argc, optind);
+
+		ret = grf_switch_signal(&radio, deviceid, true);
+		if (ret)
+		{
+			fprintf(stderr, "ERROR: Activating signal of device %s failed: %s\n", deviceid, strerror(ret));
+			exit(EXIT_FAILURE);
+		}
+	}
+	else if(strcasecmp(cmd, "deactivate-signal") == 0)
+	{
+		const char *deviceid = get_cmd_param(argv, argc, optind);
+
+		ret = grf_switch_signal(&radio, deviceid, false);
+		if (ret)
+		{
+			fprintf(stderr, "ERROR: Deactivating signal of device %s failed: %s\n", deviceid, strerror(ret));
+			exit(EXIT_FAILURE);
+		}
 	}
 	else
 	{

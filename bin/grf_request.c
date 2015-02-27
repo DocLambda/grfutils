@@ -67,8 +67,16 @@ void grf_print_data(struct grf_device *device)
 
 int grf_read_data(struct grf_radio *radio, const char *deviceid, struct grf_device *device)
 {
-	/* Scan for devices */
+	/* Request data from devices */
 	printf("Requesting data of device %s...\n", deviceid);
 
 	return grf_comm_read_data(radio, deviceid, device);
+}
+
+int grf_switch_signal(struct grf_radio *radio, const char *deviceid, bool on)
+{
+	/* Request switching accustic signal on or off */
+	printf("Switching signal of %s to %s...\n", deviceid, on ? "on" : "off");
+
+	return grf_comm_switch_signal(radio, deviceid, on);
 }
