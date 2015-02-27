@@ -40,11 +40,15 @@ static int get_data(const char *msg, size_t len, char *data)
 {
 	int datatype = GRF_DATATYPE_ERROR;
 
+	/* Empty messages are considered invalid */
+	if (len < 1)
+		return GRF_DATATYPE_ERROR;
+	
 	/* Clear the data field */
 	memset(data, '\0', len*sizeof(char));
 
 	/* Check for control characters */
-	if (len <= 1)
+	if (len == 1)
 	{
 		data[0] = msg[0];
 
