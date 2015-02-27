@@ -8,11 +8,13 @@ Currently grfutils allow to
 * scan for groups of smoke detectors
 * scan for smoke detector devices within a group
 * read the properties of a device including temperature, battery state, etc.
-
-Not yet implemented features are
-
 * activating the accustic signal of a device
 * deactivating the accustic signal of a device
+
+Not yet implemented features are
+* assign radio module to a certain group (to retrieve information shared between detectors in this group)
+* receive test alerts
+* receive actual alerts
 
 ## KUDOS
 
