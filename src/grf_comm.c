@@ -184,7 +184,6 @@ static int send_init_sequence(struct grf_radio *radio)
 static int send_request_firmware_version(struct grf_radio *radio)
 {
 	assert(grf_radio_is_valid(radio));
-	assert(radio->firmware_version);
 
 	char    msg[MSGBUFSIZE];
 	char    data[MSGBUFSIZE];
