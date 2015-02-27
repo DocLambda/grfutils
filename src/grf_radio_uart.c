@@ -294,9 +294,10 @@ int grf_radio_read(struct grf_radio *radio, char *message, size_t *len, size_t s
 					stop       = true;
 					break;
 				case GRF_STX:
-					grf_logging_err("State invalid (STARTED and got x%02x)!", c);
-					retval     = EINTR;
-					stop       = true;
+					/* Did we lose the ETX? */
+					grf_logging_err("Missed ETX? (STARTED and got x%02x)!", c);
+					message[0] = c;
+					*len       = 1;
 					break;
 				case GRF_NUL:
 				case GRF_ACK:
