@@ -326,8 +326,8 @@ int grf_radio_read(struct grf_radio *radio, char *message, size_t *len, size_t s
 
 	if (*len < 1)
 	{
-		grf_logging_dbg("recv: %s", "No data received!");
-		retval = errno;
+		grf_logging_dbg("recv: %s", "Timeout! No data received.");
+		retval = ETIMEDOUT;
 	}
 	else
 	{
