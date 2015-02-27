@@ -94,6 +94,9 @@ static int get_data(const char *msg, size_t len, char *data)
 /*****************************************************************************/
 static bool msg_is_ack(char *msg, size_t len)
 {
+	assert(msg);
+	assert(len > 0);
+
 	char data[len];
 
 	return (get_data(msg, len, data) == GRF_DATATYPE_ACK);
@@ -101,6 +104,9 @@ static bool msg_is_ack(char *msg, size_t len)
 
 static bool msg_is_timeout(char *msg, size_t len)
 {
+	assert(msg);
+	assert(len > 0);
+
 	char data[len];
 
 	return (get_data(msg, len, data) == GRF_DATATYPE_TIMEOUT);
@@ -108,6 +114,9 @@ static bool msg_is_timeout(char *msg, size_t len)
 
 static bool msg_is_done(char *msg, size_t len)
 {
+	assert(msg);
+	assert(len > 0);
+
 	char data[len];
 
 	return (get_data(msg, len, data) == GRF_DATATYPE_DONE);
@@ -115,6 +124,9 @@ static bool msg_is_done(char *msg, size_t len)
 
 static bool msg_is_rec(char *msg, size_t len)
 {
+	assert(msg);
+	assert(len > 0);
+
 	char data[len];
 
 	return (get_data(msg, len, data) == GRF_DATATYPE_REC);
@@ -124,6 +136,8 @@ static bool msg_is_rec(char *msg, size_t len)
 /*****************************************************************************/
 static int send_init_sequence(struct grf_radio *radio)
 {
+	assert(grf_radio_is_valid(radio));
+
 	char    msg[MSGBUFSIZE];
 	size_t  len;
 
@@ -145,6 +159,9 @@ static int send_init_sequence(struct grf_radio *radio)
 
 static int send_request_firmware_version(struct grf_radio *radio)
 {
+	assert(grf_radio_is_valid(radio));
+	assert(radio->firmware_version);
+
 	char    msg[MSGBUFSIZE];
 	char    data[MSGBUFSIZE];
 	size_t  len;
@@ -168,6 +185,9 @@ static int send_request_firmware_version(struct grf_radio *radio)
 
 static int send_request_groups(struct grf_radio *radio, char **groups)
 {
+	assert(grf_radio_is_valid(radio));
+	assert(groups);
+
 	char    msg[MSGBUFSIZE];
 	char    data[MSGBUFSIZE];
 	size_t  len;
@@ -197,6 +217,10 @@ static int send_request_groups(struct grf_radio *radio, char **groups)
 
 static int send_request_devices(struct grf_radio *radio, const char *group, struct grf_devicelist *devices)
 {
+	assert(grf_radio_is_valid(radio));
+	assert(group);
+	assert(devices);
+
 	char    msg[MSGBUFSIZE];
 	char    data[MSGBUFSIZE];
 	size_t  len;
@@ -247,6 +271,9 @@ static int send_request_devices(struct grf_radio *radio, const char *group, stru
 
 static int send_start_diagnosis(struct grf_radio *radio, const char *deviceid)
 {
+	assert(grf_radio_is_valid(radio));
+	assert(deviceid);
+
 	char    msg[MSGBUFSIZE];
 	size_t  len;
 
@@ -283,6 +310,9 @@ static int send_start_diagnosis(struct grf_radio *radio, const char *deviceid)
 
 static int send_data_request(struct grf_radio *radio, const char *deviceid, uint8_t reqtype)
 {
+	assert(grf_radio_is_valid(radio));
+	assert(deviceid);
+
 	char    msg[MSGBUFSIZE];
 	size_t  len;
 
@@ -317,6 +347,9 @@ static int send_data_request(struct grf_radio *radio, const char *deviceid, uint
 
 static int recv_data(struct grf_radio *radio, struct grf_device *device)
 {
+	assert(grf_radio_is_valid(radio));
+	assert(device);
+
 	char      msg[MSGBUFSIZE];
 	char      data[MSGBUFSIZE];
 	size_t    len;
