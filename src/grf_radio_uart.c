@@ -274,7 +274,7 @@ int grf_radio_read(struct grf_radio *radio, char *message, size_t *len, size_t s
 					 */
 					break;
 				default:
-					grf_logging_err("State invalid (INITIAL and got \'%c\')!", c);
+					grf_logging_err("State invalid (INITIAL and got x%02x)!", c);
 					retval     = EINVAL;
 					stop       = true;
 					break;
@@ -294,14 +294,14 @@ int grf_radio_read(struct grf_radio *radio, char *message, size_t *len, size_t s
 					stop       = true;
 					break;
 				case GRF_STX:
-					grf_logging_err("State invalid (STARTED and got \'%c\')!", c);
+					grf_logging_err("State invalid (STARTED and got x%02x)!", c);
 					retval     = EINTR;
 					stop       = true;
 					break;
 				case GRF_NUL:
 				case GRF_ACK:
 				case GRF_NAK:
-					grf_logging_err("State invalid (STARTED and got \'%c\')!", c);
+					grf_logging_err("State invalid (STARTED and got x%02x)!", c);
 					retval     = EINVAL;
 					stop       = true;
 					break;
