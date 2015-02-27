@@ -229,7 +229,7 @@ int main(int argc, char **argv)
 		if (devices.len < 1)
 			printf("No devices found!\n");
 
-		printf("Found the %d devices in group %s:\n", devices.len, groupid);
+		printf("Found %d devices in group %s:\n", devices.len, groupid);
 		for (i = 0; i < devices.len; i++)
 		{
 			printf("    %s\n", devices.devices[i].id);
