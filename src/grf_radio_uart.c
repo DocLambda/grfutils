@@ -274,7 +274,7 @@ int grf_radio_read(struct grf_radio *radio, char *message, size_t *len, size_t s
 					 */
 					break;
 				default:
-					grf_logging_err("State invalid (INITIAL and got \'%c\')!", c);
+					grf_logging_err("State invalid (INITIAL and got x%02x)!", c);
 					retval     = EINVAL;
 					stop       = true;
 					break;
@@ -294,14 +294,15 @@ int grf_radio_read(struct grf_radio *radio, char *message, size_t *len, size_t s
 					stop       = true;
 					break;
 				case GRF_STX:
-					grf_logging_err("State invalid (STARTED and got \'%c\')!", c);
-					retval     = EINTR;
-					stop       = true;
+					/* Did we lose the ETX? */
+					grf_logging_err("Missed ETX? (STARTED and got x%02x)!", c);
+					message[0] = c;
+					*len       = 1;
 					break;
 				case GRF_NUL:
 				case GRF_ACK:
 				case GRF_NAK:
-					grf_logging_err("State invalid (STARTED and got \'%c\')!", c);
+					grf_logging_err("State invalid (STARTED and got x%02x)!", c);
 					retval     = EINVAL;
 					stop       = true;
 					break;
@@ -342,16 +343,16 @@ int grf_radio_read(struct grf_radio *radio, char *message, size_t *len, size_t s
 int grf_radio_write(struct grf_radio *radio, const char *message, size_t len)
 {
 	ssize_t count;
-	size_t  written = 0;
 
 	grf_logging_dbg_hex(message, len, "send: %s", message);
 
-	do {
+	while(len > 0) {
 		count = write(radio->fd, message, len*sizeof(char));
-		if (count < 0)
-			return errno;
-		written += count;
-	} while (written < len);
+		if (count <= 0)
+			return count ? errno : EAGAIN;
+		message += count;
+		len -= count;
+	}
 
 	fsync(radio->fd);
 
