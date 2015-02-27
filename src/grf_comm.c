@@ -507,3 +507,46 @@ int grf_comm_read_data(struct grf_radio *radio, const char *deviceid, struct grf
 	return 0;
 }
 /*****************************************************************************/
+
+/*****************************************************************************/
+int grf_comm_switch_signal(struct grf_radio *radio, const char *deviceid, bool on)
+{
+	/* Variable declaration */
+	int retval;
+
+	/* Write the initialization sequence and switch the signal on or off:
+	 *    <NUL><STX>01TESTA1<ETX>   -->
+	 *                              <-- <ACK>
+	 *    <STX>DA:$DEVICEID:05<ETX> -->
+	 *                              <-- <ACK>
+	 *                              <-- <STX>Done<ETX>
+	 *  in case we receive a TIMEOUT we need to start the diagnosis mode first:
+	 *    <STX>SD:$DEVICEID<ETX>    -->
+	 *                              <-- <ACK>
+	 *                              <-- <STX>REC<ETX>
+	 *                              <-- <STX>Done<ETX>
+	 *  end
+	 *  in case we want to switch the signal on:
+	 *    <STX>DA:$DEVICEID:03<ETX> -->
+	 *                              <-- <ACK>
+	 *                              <-- DATA
+	 *  in case we want to switch the signal off:
+	 *    <STX>DA:$DEVICEID:06<ETX> -->
+	 *                              <-- <ACK>
+	 *                              <-- DATA
+	 *  end
+	 *    <STX>DA:$DEVICEID:04<ETX> -->
+	 *                              <-- <ACK>
+	 *                              <-- <STX>Done<ETX>
+	 */
+	RETURN_ON_ERROR(send_init_sequence(radio));
+	retval = send_data_request(radio, deviceid, GRF_DA_TYPE_START);
+	if (retval == ETIMEDOUT)
+		retval = send_start_diagnosis(radio, deviceid);
+	RETURN_ON_ERROR(retval);
+	RETURN_ON_ERROR(send_data_request(radio, deviceid, on ? GRF_DA_TYPE_SIGNAL_ON : GRF_DA_TYPE_SIGNAL_OFF));
+	RETURN_ON_ERROR(send_data_request(radio, deviceid, GRF_DA_TYPE_STOP));
+
+	return 0;
+}
+/*****************************************************************************/
