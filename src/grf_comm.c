@@ -203,6 +203,8 @@ static int send_request_firmware_version(struct grf_radio *radio)
 		return EIO;
 
 	radio->firmware_version = strdup(data);
+	if (!radio->firmware_version)
+		return ENOMEM;
 
 	return 0;
 }
@@ -233,8 +235,10 @@ static int send_request_groups(struct grf_radio *radio, char **groups)
 		return ETIMEDOUT;
 	if (get_data(msg, len, data) != GRF_DATATYPE_DATA)
 		return EIO;
-	if (groups)
-		*groups = strdup(data);
+
+	*groups = strdup(data);
+	if (!*groups)
+		return ENOMEM;
 
 	return 0;
 }
