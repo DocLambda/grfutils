@@ -23,6 +23,7 @@
 #include <stdbool.h>
 #include <unistd.h>
 
+#include <assert.h>
 #include <errno.h>
 #include <string.h>
 
@@ -419,6 +420,8 @@ static int recv_data(struct grf_radio *radio, struct grf_device *device)
 /*****************************************************************************/
 int grf_comm_init(struct grf_radio *radio)
 {
+	assert(grf_radio_is_valid(radio));
+
 	/* Write the initialization sequence and get firmware version:
 	 *    <NUL><STX>01TESTA1<ETX>   -->
 	 *                              <-- <ACK>
@@ -435,6 +438,9 @@ int grf_comm_init(struct grf_radio *radio)
 /*****************************************************************************/
 int grf_comm_scan_groups(struct grf_radio *radio, char **groups)
 {
+	assert(grf_radio_is_valid(radio));
+	assert(groups);
+
 	/* Write the initialization sequence and get firmware version:
 	 *    <NUL><STX>01TESTA1<ETX>   -->
 	 *                              <-- <ACK>
@@ -451,6 +457,10 @@ int grf_comm_scan_groups(struct grf_radio *radio, char **groups)
 /*****************************************************************************/
 int grf_comm_scan_devices(struct grf_radio *radio, const char *group, struct grf_devicelist *devices)
 {
+	assert(grf_radio_is_valid(radio));
+	assert(group);
+	assert(devices);
+
 	/* Initialize the device list */
 	devices->len = 0;
 
@@ -470,6 +480,10 @@ int grf_comm_scan_devices(struct grf_radio *radio, const char *group, struct grf
 /*****************************************************************************/
 int grf_comm_read_data(struct grf_radio *radio, const char *deviceid, struct grf_device *device)
 {
+	assert(grf_radio_is_valid(radio));
+	assert(deviceid);
+	assert(device);
+
 	/* Variable declaration */
 	int retval;
 
@@ -511,6 +525,9 @@ int grf_comm_read_data(struct grf_radio *radio, const char *deviceid, struct grf
 /*****************************************************************************/
 int grf_comm_switch_signal(struct grf_radio *radio, const char *deviceid, bool on)
 {
+	assert(grf_radio_is_valid(radio));
+	assert(deviceid);
+
 	/* Variable declaration */
 	int retval;
 
