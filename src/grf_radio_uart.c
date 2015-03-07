@@ -294,8 +294,8 @@ int grf_radio_read(struct grf_radio *radio, char *message, size_t *len, size_t s
 					stop       = true;
 					break;
 				case GRF_STX:
-					/* Did we lose the ETX? */
-					grf_logging_err("Missed ETX? (STARTED and got x%02x)!", c);
+					grf_logging_warn("Missed ETX! (STARTED and got x%02x)!", c);
+					grf_logging_warn_hex(message, *len, "Incomplete message was: %s", message);
 					message[0] = c;
 					*len       = 1;
 					break;
