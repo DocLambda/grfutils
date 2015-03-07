@@ -241,7 +241,7 @@ int grf_radio_read(struct grf_radio *radio, char *message, size_t *len, size_t s
 	{
 		if (count < 1)
 		{
-			grf_logging_log(GRF_LOGGING_DEBUG, "read: No data received. Retrying %d more time(s)...", repeats);
+			grf_logging_dbg("read: No data received. Retrying %d more time(s)...", repeats);
 			continue;
 		}
 		grf_logging_log(GRF_LOGGING_DEBUG_IO, "read: 0x%02x", c);
