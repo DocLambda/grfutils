@@ -342,14 +342,30 @@ int grf_radio_read(struct grf_radio *radio, char *message, size_t *len, size_t s
 /*****************************************************************************/
 int grf_radio_write(struct grf_radio *radio, const char *message, size_t len)
 {
+	int     repeats = radio->timeout_repeats;
 	ssize_t count;
 
 	grf_logging_dbg_hex(message, len, "send: %s", message);
 
+	errno = 0;
 	while(len > 0) {
 		count = write(radio->fd, message, len*sizeof(char));
-		if (count <= 0)
-			return count ? errno : EAGAIN;
+		if (count < 0)
+		{
+			return errno;
+		}
+		else if (count == 0)
+		{
+			if (--repeats > 0)
+			{
+				grf_logging_dbg("write: No data written. Retrying %d more time(s)...", repeats);
+				continue;
+			}
+			else
+			{
+				return ETIMEDOUT;
+			}
+		}
 		message += count;
 		len -= count;
 	}
