@@ -33,8 +33,11 @@
 #define grf_logging_warn(_fmt_, ...)	grf_logging_log(GRF_LOGGING_WARN,  (_fmt_), __VA_ARGS__)
 #define grf_logging_err(_fmt_, ...)	grf_logging_log(GRF_LOGGING_ERR,   (_fmt_), __VA_ARGS__)
 
+#define grf_logging_dbg_hex(_hexstr_, _hexlen_, _fmt_, ...) grf_logging_log_hex(GRF_LOGGING_DEBUG, (_hexstr_), (_hexlen_), (_fmt_), __VA_ARGS__)
+#define grf_logging_warn_hex(_hexstr_, _hexlen_, _fmt_, ...) grf_logging_log_hex(GRF_LOGGING_DEBUG, (_hexstr_), (_hexlen_), (_fmt_), __VA_ARGS__)
+
 void grf_logging_setlevel(int level);
 void grf_logging_log(int level, const char *fmt, ...);
-void grf_logging_dbg_hex(const char *hexstr, size_t hexlen, const char *fmt, ...);
+void grf_logging_log_hex(int level, const char *hexstr, size_t hexlen, const char *fmt, ...);
 
 #endif /* __GRF_LOGGING_H */

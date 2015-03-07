@@ -138,19 +138,41 @@ void grf_logging_log(int level, const char *fmt, ...)
 	fflush(stdout);
 }
 
-void grf_logging_dbg_hex(const char *hexstr, size_t hexlen, const char *fmt, ...)
+void grf_logging_log_hex(int level, const char *hexstr, size_t hexlen, const char *fmt, ...)
 {
 	va_list          arglist;
 	struct timespec  logtime;
-	const char      *loglevel = "DEBUG: ";
+	const char      *loglevel;
 	char            *msg;
 
 	/* We should not log this message... */
-	if (GRF_LOGGING_DEBUG > log_consolelevel)
+	if (level > log_consolelevel)
 		return;
 
 	/* Determine the point in time the logging occures */
 	clock_gettime(CLOCK_REALTIME, &logtime);
+
+	switch(level)
+	{
+		case GRF_LOGGING_DEBUG_IO:
+			loglevel = "I/O:   ";
+			break;
+		case GRF_LOGGING_DEBUG:
+			loglevel = "DEBUG: ";
+			break;
+		case GRF_LOGGING_INFO:
+			loglevel = "INFO:  ";
+			break;
+		case GRF_LOGGING_WARN:
+			loglevel = "WARN:  ";
+			break;
+		case GRF_LOGGING_ERR:
+			loglevel = "ERROR: ";
+			break;
+		default:
+			loglevel = "UNKNOWN: ";
+			break;
+	}
 
 	printf("%.3f: %s", logtime.tv_sec + (float)logtime.tv_nsec*10E-9, loglevel);
 	va_start(arglist, fmt);
