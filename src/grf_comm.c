@@ -39,8 +39,16 @@
 /*****************************************************************************/
 static int generate_command(char *msg, size_t *len, size_t size, const char *fmt, ...)
 {
+	assert(msg);
+	assert(len);
+	assert(fmt);
+
 	va_list arglist;
 	int     count;
+
+	/* Empty messages are considered invalid */
+	if (size < 1)
+		return EINVAL;
 
 	/* Initialize the returned len */
 	*len = 0;
@@ -53,6 +61,11 @@ static int generate_command(char *msg, size_t *len, size_t size, const char *fmt
 	/* Check if the message fits the message buffer */
 	if (count >= size || count < 0 /* handle GNU C Library prior to 2.1*/)
 		return ENOBUFS;
+
+	/* Check if the resulting command has content at all */
+	if (count  < 1)
+		return EINVAL;
+
 	*len = count;
 
 	return 0;
@@ -62,6 +75,9 @@ static int generate_command(char *msg, size_t *len, size_t size, const char *fmt
 /*****************************************************************************/
 static int get_data(const char *msg, size_t len, char *data)
 {
+	assert(msg);
+	assert(data);
+
 	int datatype = GRF_DATATYPE_ERROR;
 
 	/* Empty messages are considered invalid */
@@ -284,6 +300,10 @@ static int send_request_devices(struct grf_radio *radio, const char *group, stru
 			return EIO;
 		grf_logging_dbg("Received device ID: %s", data);
 
+		/* Check if there is still some room to store the devices */
+		if (devices->len >= GRF_MAXDEVICES)
+			return ENOBUFS;
+
 		/* Add device to the device array and set the update
 		 * time to invalid (-1) to mark that the device was
 		 * not yet updated.
@@ -291,6 +311,9 @@ static int send_request_devices(struct grf_radio *radio, const char *group, stru
 		devices->devices[devices->len].id        = strdup(data);
 		devices->devices[devices->len].timestamp = -1;
 		devices->len++;
+
+		if (!devices->devices[devices->len].id)
+			return ENOMEM;
 	}
 
 	return 0;
@@ -553,6 +576,8 @@ int grf_comm_read_data(struct grf_radio *radio, const char *deviceid, struct grf
 
 	/* Initialize the device data */
 	device->id = strdup(deviceid);
+	if (!device->id)
+		return ENOMEM;
 
 	/* Write the initialization sequence and receive acquired data:
 	 *    <NUL><STX>01TESTA1<ETX>   -->
