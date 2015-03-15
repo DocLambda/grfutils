@@ -24,6 +24,7 @@
 #include <stdbool.h>
 #include <unistd.h>
 
+#include <assert.h>
 #include <errno.h>
 #include <string.h>
 
@@ -124,6 +125,9 @@ static void grf_uart_close(int fd)
 /*****************************************************************************/
 int grf_radio_init(struct grf_radio *radio, const char *dev, unsigned int timeout)
 {
+	assert(radio);
+	assert(dev);
+
 	uint32_t t_user = timeout * 10;
 	uint32_t i;
 	int      ret;
@@ -137,6 +141,8 @@ int grf_radio_init(struct grf_radio *radio, const char *dev, unsigned int timeou
 	/* Copy the given data to the radio */
 	radio->dev          = strdup(dev);
 	radio->timeout_user = t_user;
+	if (!radio->dev)
+		return ENOMEM;
 
 	/* The TTY layer handles the timeout as unsigned char, thus limiting the
 	 * maximal timeout to 25.5 seconds. We sometimes, especially during
@@ -191,6 +197,8 @@ int grf_radio_init(struct grf_radio *radio, const char *dev, unsigned int timeou
 
 int grf_radio_exit(struct grf_radio *radio)
 {
+	assert(radio);
+
 	if (!radio->is_initialized)
 		return 0;
 
@@ -222,6 +230,12 @@ int grf_radio_exit(struct grf_radio *radio)
 /*****************************************************************************/
 int grf_radio_read(struct grf_radio *radio, char *message, size_t *len, size_t size)
 {
+	assert(radio);
+	assert(radio->fd > 0);
+	assert(message);
+	assert(len);
+	assert(size > 0);
+
 	char    c;
 	bool    msgstarted = false;
 	bool    stop       = false;
@@ -250,9 +264,9 @@ int grf_radio_read(struct grf_radio *radio, char *message, size_t *len, size_t s
 		if (!msgstarted)
 		{
 			/* We either expect a control character such as ACK/NAK or
-			* a begin-of-message tag. All other characters are treated
-			* as errors!
-			*/
+			 * a begin-of-message tag. All other characters are treated
+			 * as errors!
+			 */
 			switch(c)
 			{
 				case GRF_NUL:
@@ -280,11 +294,11 @@ int grf_radio_read(struct grf_radio *radio, char *message, size_t *len, size_t s
 					break;
 			}
 		}
-		else
+		else	/* msgstarted */
 		{
 			/* We either expect a data character or and end-of-message tag.
-			* All other characters are treated as errors!
-			*/
+			 * All other characters are treated as errors!
+			 */
 			switch(c)
 			{
 				case GRF_ETX:
