@@ -35,6 +35,11 @@
 #include "grf_logging.h"
 
 
+#define GRF_ANSWER_TIMEOUT      "Timeout"           /* Also used for end of transmission */
+#define GRF_ANSWER_DONE         "Done"              /* Expected answer to indicate completion of command */
+#define GRF_ANSWER_REC          "REC"               /* Expected to indicate that data recording is in process */
+#define GRF_ANSWER_VERSION      "GI_RM_V00.70"      /* Expected version string */
+
 #define GRF_DATATYPE_ERROR      -1
 #define GRF_DATATYPE_CONTROL     0
 #define GRF_DATATYPE_ACK         1

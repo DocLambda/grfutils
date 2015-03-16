@@ -47,11 +47,6 @@
 #define GRF_DA_TYPE_STOP        4                   /* Request stopping data acquisition */
 #define GRF_REQUEST_DIAG        "%cSD:%s%c"         /* Request sending diagnosis data */
 
-#define GRF_ANSWER_TIMEOUT      "Timeout"           /* Also used for end of transmission */
-#define GRF_ANSWER_DONE         "Done"              /* Expected answer to indicate completion of command */
-#define GRF_ANSWER_REC          "REC"               /* Expected to indicate that data recording is in process */
-#define GRF_ANSWER_VERSION      "GI_RM_V00.70"      /* Expected version string */
-
 #define GRF_UNKNOWN_REGISTER_INDEX(__regid__) ((__regid__) - 0x14)
 
 /* Data structures */
