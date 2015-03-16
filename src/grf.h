@@ -35,18 +35,6 @@
 
 #define GRF_MAXDEVICES          40                  /* Maximum number of devices in one group */
 
-#define GRF_INIT_TEST           "%c01TESTA1%c"      /* Set RF module to command mode */
-#define GRF_INIT_SV             "%cSV%c"            /* Request sending the firmware version */
-#define GRF_SCAN_GA             "%cGA%c"            /* Request scanning group adress */
-#define GRF_SCAN_GD             "%cGD:%s%c"         /* Request scanning of all devices of a group adress */
-#define GRF_REQUEST_DA_TMPL     "%cDA:%s:%02d%c"    /* Template for data acquisition request */
-#define GRF_DA_TYPE_START       5                   /* Request starting data acquisition */
-#define GRF_DA_TYPE_SIGNAL_ON   3                   /* Request switching on accustic signal */
-#define GRF_DA_TYPE_SIGNAL_OFF  6                   /* Request switching off accustic signal */
-#define GRF_DA_TYPE_SEND        1                   /* Request sending the aquired data */
-#define GRF_DA_TYPE_STOP        4                   /* Request stopping data acquisition */
-#define GRF_REQUEST_DIAG        "%cSD:%s%c"         /* Request sending diagnosis data */
-
 #define GRF_UNKNOWN_REGISTER_INDEX(__regid__) ((__regid__) - 0x14)
 
 /* Data structures */
