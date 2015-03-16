@@ -36,8 +36,10 @@
 #include "grf_logging.h"
 
 /*****************************************************************************/
-static void grf_uart_set_timeout(int fd, cc_t timeout)
+static int grf_uart_set_timeout(int fd, cc_t timeout)
 {
+	assert(fd >= 0);
+
 	struct termios tty_attr;
 
 	grf_logging_info("Setting timeout of %d to %.1f seconds...", fd, timeout/10.0f);
@@ -45,7 +47,12 @@ static void grf_uart_set_timeout(int fd, cc_t timeout)
 	/* In case no timeout is given, we always block to retrieve at
 	 * least one character.
 	 */
-	tcgetattr(fd, &tty_attr);
+	if (tcgetattr(fd, &tty_attr))
+	{
+		grf_logging_err("Getting TTY attributes of %d failed: %s", fd, strerror(errno));
+		return errno;
+	}
+
 	if (timeout == 0)
 		tty_attr.c_cc[VMIN] = 1;
 	else
@@ -57,16 +64,27 @@ static void grf_uart_set_timeout(int fd, cc_t timeout)
 	grf_logging_dbg("  vtime = %u...", tty_attr.c_cc[VTIME]);
 
 	if (tcsetattr(fd, TCSANOW, &tty_attr))
+	{
 		grf_logging_err("Setting timeout of %d to %u failed: %s", fd, timeout, strerror(errno));
+		return errno;
+	}
 
 	/* Make sure settings are actually transmitted */
-	tcdrain(fd);
+	if (tcdrain(fd))
+	{
+		grf_logging_err("Draining data of TTY %d failed: %s", fd, strerror(errno));
+		return errno;
+	}
+
+	return 0;
 }
 /*****************************************************************************/
 
 /*****************************************************************************/
 static int grf_uart_open(const char *dev)
 {
+	assert(dev);
+
 	int fd;
 
 	/* Open the device for read and write and prevent it from
@@ -91,16 +109,37 @@ static int grf_uart_open(const char *dev)
 
 static int grf_uart_setup(int fd)
 {
+	assert(fd >= 0);
+
 	struct termios tty_attr;
 
 	grf_logging_info("Setting up UART %d...", fd);
 
 	/* Setup the port for communication. */
-	tcgetattr(fd, &tty_attr);
-	tcflush(fd, TCIOFLUSH);
-	cfsetspeed(&tty_attr, GRF_BAUDRATE);
+	if (tcgetattr(fd, &tty_attr))
+	{
+		grf_logging_err("Getting TTY attributes of %d failed: %s", fd, strerror(errno));
+		return errno;
+	}
+
+	if (tcflush(fd, TCIOFLUSH))
+	{
+		grf_logging_err("Flushing of %d failed: %s", fd, strerror(errno));
+		return errno;
+	}
+
+	if (cfsetspeed(&tty_attr, GRF_BAUDRATE))
+	{
+		grf_logging_err("Setting speed of TTY %d failed: %s", fd, strerror(errno));
+		return errno;
+	}
+
 	cfmakeraw(&tty_attr);
-	tcflush(fd, TCIOFLUSH);
+	if (tcflush(fd, TCIOFLUSH))
+	{
+		grf_logging_err("Flushing of %d failed: %s", fd, strerror(errno));
+		return errno;
+	}
 
 	/* Set port to blocking */
 	tty_attr.c_cc[VMIN]  = 0;
@@ -108,7 +147,10 @@ static int grf_uart_setup(int fd)
 
 	/* Actually set the new configuration */
 	if (tcsetattr(fd, TCSANOW, &tty_attr))
+	{
+		grf_logging_err("Setting TTY attributes of %d failed: %s", fd, strerror(errno));
 		return errno;
+	}
 
 	/* Make sure settings are actually transmitted */
 	return tcdrain(fd);
@@ -116,6 +158,8 @@ static int grf_uart_setup(int fd)
 
 static void grf_uart_close(int fd)
 {
+	assert(fd >= 0);
+
 	/* Clear all remaining data on port */
 	tcflush(fd, TCIOFLUSH);
 	close(fd);
@@ -177,7 +221,11 @@ int grf_radio_init(struct grf_radio *radio, const char *dev, unsigned int timeou
 		grf_logging_err("Opening radio device %s failed: %s", dev, strerror(errno));
 		return errno;
 	}
-	tcgetattr(radio->fd, &radio->tty_attr_saved);
+	if (tcgetattr(radio->fd, &radio->tty_attr_saved))
+	{
+		grf_logging_err("Getting TTY attributes of radio device %s failed: %s", dev, strerror(errno));
+		return errno;
+	}
 	radio->is_initialized = true;
 
 	/* Setup the port settings to allow communication with the radio. */
@@ -190,9 +238,7 @@ int grf_radio_init(struct grf_radio *radio, const char *dev, unsigned int timeou
 	}
 
 	/* Set the timeout for request / response communication */
-	grf_uart_set_timeout(radio->fd, radio->timeout_tty);
-
-	return 0;
+	return grf_uart_set_timeout(radio->fd, radio->timeout_tty);
 }
 
 int grf_radio_exit(struct grf_radio *radio)
