@@ -211,7 +211,7 @@ int grf_radio_exit(struct grf_radio *radio)
 	tcsetattr(radio->fd, TCSANOW, &radio->tty_attr_saved);
 
 	/* Close UART */
-	if (radio->fd > 0)
+	if (radio->fd >= 0)
 		grf_uart_close(radio->fd);
 
 	/* Free the device name */
@@ -230,8 +230,7 @@ int grf_radio_exit(struct grf_radio *radio)
 /*****************************************************************************/
 int grf_radio_read(struct grf_radio *radio, char *message, size_t *len, size_t size)
 {
-	assert(radio);
-	assert(radio->fd > 0);
+	assert(grf_radio_is_valid(radio));
 	assert(message);
 	assert(len);
 	assert(size > 0);
@@ -356,6 +355,9 @@ int grf_radio_read(struct grf_radio *radio, char *message, size_t *len, size_t s
 /*****************************************************************************/
 int grf_radio_write(struct grf_radio *radio, const char *message, size_t len)
 {
+	assert(grf_radio_is_valid(radio));
+	assert(message);
+
 	int     repeats = radio->timeout_repeats;
 	ssize_t count;
 
@@ -381,7 +383,7 @@ int grf_radio_write(struct grf_radio *radio, const char *message, size_t len)
 			}
 		}
 		message += count;
-		len -= count;
+		len     -= count;
 	}
 
 	fsync(radio->fd);
@@ -391,6 +393,8 @@ int grf_radio_write(struct grf_radio *radio, const char *message, size_t len)
 
 int grf_radio_write_ctrl(struct grf_radio *radio, char ctrl)
 {
+	assert(grf_radio_is_valid(radio));
+
 	grf_logging_dbg("sctl: 0x%02x", ctrl);
 	if (write(radio->fd, &ctrl, sizeof(char)) < 0)
 		return errno;
