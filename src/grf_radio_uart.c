@@ -204,15 +204,17 @@ int grf_radio_exit(struct grf_radio *radio)
 
 	grf_logging_info("Closing communication at device %s", radio->dev);
 
-	/* Clean all remaining data on the device */
-	tcflush(radio->fd, TCIOFLUSH);
-
-	/* Restore UART settings */
-	tcsetattr(radio->fd, TCSANOW, &radio->tty_attr_saved);
-
-	/* Close UART */
 	if (radio->fd >= 0)
+	{
+		/* Clean all remaining data on the device */
+		tcflush(radio->fd, TCIOFLUSH);
+
+		/* Restore UART settings */
+		tcsetattr(radio->fd, TCSANOW, &radio->tty_attr_saved);
+
+		/* Close UART */
 		grf_uart_close(radio->fd);
+	}
 
 	/* Free the device name */
 	if (radio->dev)
