@@ -33,9 +33,9 @@
     if ((__retval__)) return (__retval__); \
 }
 
-#define GRF_MAXDEVICES          40                  /* Maximum number of devices in one group */
-
 #define GRF_UNKNOWN_REGISTER_INDEX(__regid__) ((__regid__) - 0x14)
+
+#define GRF_MAXDEVICES          40                  /* Maximum number of devices in one group */
 
 /* Data structures */
 struct grf_device
