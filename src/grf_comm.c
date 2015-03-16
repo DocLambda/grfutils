@@ -34,6 +34,16 @@
 #include "grf_radio.h"
 #include "grf_logging.h"
 
+
+#define GRF_DATATYPE_ERROR      -1
+#define GRF_DATATYPE_CONTROL     0
+#define GRF_DATATYPE_ACK         1
+#define GRF_DATATYPE_DATA       10
+#define GRF_DATATYPE_VERSION    11
+#define GRF_DATATYPE_REC        12
+#define GRF_DATATYPE_DONE       13
+#define GRF_DATATYPE_TIMEOUT    19
+
 #define MSGBUFSIZE		255
 
 /*****************************************************************************/

@@ -52,15 +52,6 @@
 #define GRF_ANSWER_REC          "REC"               /* Expected to indicate that data recording is in process */
 #define GRF_ANSWER_VERSION      "GI_RM_V00.70"      /* Expected version string */
 
-#define GRF_DATATYPE_ERROR      -1
-#define GRF_DATATYPE_CONTROL     0
-#define GRF_DATATYPE_ACK         1
-#define GRF_DATATYPE_DATA       10
-#define GRF_DATATYPE_VERSION    11
-#define GRF_DATATYPE_REC        12
-#define GRF_DATATYPE_DONE       13
-#define GRF_DATATYPE_TIMEOUT    19
-
 #define GRF_UNKNOWN_REGISTER_INDEX(__regid__) ((__regid__) - 0x14)
 
 /* Data structures */
