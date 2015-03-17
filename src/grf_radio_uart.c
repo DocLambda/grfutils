@@ -434,7 +434,13 @@ int grf_radio_write(struct grf_radio *radio, const char *message, size_t len)
 		len     -= count;
 	}
 
-	return fsync(radio->fd);
+	if (fsync(radio->fd))
+	{
+		grf_logging_err("Calling fsync on %d failed: %s", radio->fd, strerror(errno));
+		return errno;
+	}
+
+	return 0;
 }
 
 int grf_radio_write_ctrl(struct grf_radio *radio, char ctrl)
@@ -445,6 +451,12 @@ int grf_radio_write_ctrl(struct grf_radio *radio, char ctrl)
 	if (write(radio->fd, &ctrl, sizeof(char)) < 0)
 		return errno;
 
-	return fsync(radio->fd);
+	if (fsync(radio->fd))
+	{
+		grf_logging_err("Calling fsync on %d failed: %s", radio->fd, strerror(errno));
+		return errno;
+	}
+
+	return 0;
 }
 /*****************************************************************************/
