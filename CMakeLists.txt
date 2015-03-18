@@ -24,6 +24,13 @@ set(GRFUTILS_VERSION_MAJOR    0)
 set(GRFUTILS_VERSION_MINOR    1)
 set(GRFUTILS_VERSION_REVISION 0)
 
+option(BUILD_DOC "generate API documentation" ON)
+
+if(BUILD_DOC)
+	message("Generating API documentation with Doxygen")
+	find_package(Doxygen REQUIRED)
+endif(BUILD_DOC)
+
 #configure_file("${PROJECT_SOURCE_DIR}/version.h.in" "${PROJECT_BINARY_DIR}/version.h")
 
 # Debug/Release flags
