@@ -19,6 +19,10 @@
  * along with grfutils.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*! \addtogroup communication Communication
+ * @{
+ */
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -682,3 +686,4 @@ int grf_comm_switch_signal(struct grf_radio *radio, const char *deviceid, bool o
 	return 0;
 }
 /*---------------------------------------------------------------------------*/
+/* @} */

@@ -19,6 +19,10 @@
  * along with grfutils.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*! \addtogroup datastructs Data structures
+ * @{
+ */
+
 #ifndef __GRF_H__
 #define __GRF_H__
 
@@ -79,3 +83,4 @@ int grf_comm_read_data(struct grf_radio *radio, const char *deviceid, struct grf
 int grf_comm_switch_signal(struct grf_radio *radio, const char *deviceid, bool on);
 
 #endif /* __GRF_H__ */
+/* @} */
