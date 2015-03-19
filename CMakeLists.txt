@@ -24,11 +24,23 @@ set(GRFUTILS_VERSION_MAJOR    0)
 set(GRFUTILS_VERSION_MINOR    1)
 set(GRFUTILS_VERSION_REVISION 0)
 
-option(BUILD_DOC "generate API documentation" ON)
+option(BUILD_DOC "Generate API documentation (requires doxygen)." ON)
 
 if(BUILD_DOC)
-	message("Generating API documentation with Doxygen")
 	find_package(Doxygen REQUIRED)
+	configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in
+			${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY
+		      )
+	add_custom_target(doc
+			  ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+			  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+			  COMMENT "Generating API documentation with Doxygen"
+			  VERBATIM
+	)
+	install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc/html
+		DESTINATION share/doc
+		OPTIONAL
+	)
 endif(BUILD_DOC)
 
 #configure_file("${PROJECT_SOURCE_DIR}/version.h.in" "${PROJECT_BINARY_DIR}/version.h")
