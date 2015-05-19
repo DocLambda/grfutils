@@ -19,10 +19,6 @@
  * along with grfutils.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*! \addtogroup communication Communication
- * @{
- */
-
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -585,7 +581,7 @@ int grf_comm_scan_devices(struct grf_radio *radio, const char *group, struct grf
 	 *    <NUL><STX>01TESTA1<ETX>   -->
 	 *                              <-- <ACK>
 	 *    <STX>GD:$GROUPID<ETX>     -->
-	 *                              <-- Group IDs
+	 *                              <-- Device IDs
 	 */
 	RETURN_ON_ERROR(send_init_sequence(radio));
 	RETURN_ON_ERROR(send_request_devices(radio, group, devices));
@@ -686,4 +682,3 @@ int grf_comm_switch_signal(struct grf_radio *radio, const char *deviceid, bool o
 	return 0;
 }
 /*---------------------------------------------------------------------------*/
-/* @} */
