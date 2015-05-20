@@ -49,7 +49,7 @@
     if ((__retval__)) return (__retval__); \
 }									/*!< Check return value and return on error */
 
-#define GRF_UNKNOWN_REGISTER_INDEX(__regid__) ((__regid__) - 0x14)	/*!< Determine register array index from register ID */
+#define GRF_UNKNOWN_REGISTER_INDEX(__regid__) ((__regid__) - 0x14)	/*!< Macro to determine register array index from register ID */
 
 #define GRF_MAXDEVICES          40		/*!< Maximum number of devices in one group */
 
