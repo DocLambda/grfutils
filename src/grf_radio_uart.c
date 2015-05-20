@@ -266,7 +266,6 @@ int grf_radio_exit(struct grf_radio *radio)
 	if (radio->dev)
 		free(radio->dev);
 
-	/* Reset the device structure */
 	/* Reset the radio structure */
 	memset(radio, 0, sizeof(struct grf_radio));
 	radio->is_initialized = false;
