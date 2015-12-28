@@ -96,7 +96,7 @@ int main(int argc, char **argv)
 	int            loglevel = GRF_DEFAULT_LOGLEVEL;
 	int            index;
 	int            ret;
-	char           c;
+	int            c;
 
 	static struct option options[] =
 	{
