@@ -1,12 +1,17 @@
+
+Short overview for those who don't read manuals. This COMPILE file describes
+how to compile and setup libgrf.so and grfctl
+
 == Installation
 
 Clone this repository:
-# git clone git://github.com/pldemone/grfutils
+# git clone git://github.com/DocLambda/grfutils
 # cd grfutils
 
 == Linux and FreeBSD
 
-Make sure you have cmake and the gcc toolchain required for compilation installed:
+Make sure you have cmake and the gcc toolchain required for compilation
+installed:
 
 * Ubuntu
 # sudo apt-get install build-essential cmake
