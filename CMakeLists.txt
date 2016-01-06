@@ -47,6 +47,7 @@ endif(BUILD_DOC)
 
 # Debug/Release flags
 set(CMAKE_C_FLAGS_DEBUG "-DGRFUTILS_DEBUG")
+set (CMAKE_SHARED_LINKER_FLAGS "-lrt")
 
 # Compiler flags
 add_definitions("-Wall")

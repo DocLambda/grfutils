@@ -1,0 +1,48 @@
+
+Short overview for those who don't read manuals. This COMPILE file describes
+how to compile and setup libgrf.so and grfctl
+
+== Installation
+
+Clone this repository:
+# git clone git://github.com/DocLambda/grfutils
+# cd grfutils
+
+== Linux and FreeBSD
+
+Make sure you have cmake and the gcc toolchain required for compilation
+installed:
+
+* Ubuntu
+# sudo apt-get install build-essential cmake
+
+* Fedora
+# sudo yum install make cmake gcc gcc-c++
+
+* FreeBSD
+# pkg install cmake
+
+Build:
+# cd grfutils
+# cmake .
+# make
+
+== Raspberry/Raspbian
+
+Download and install the latest Raspbian development distribution.
+
+Set environment:
+# mkdir rtools
+# cd rtools
+# git clone git://github.com/raspberrypi/tools.git
+# export RASPBIANSRC=PATH_TO_rtools
+# export PATH=${RASPBIANSRC}/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin:$PATH
+# export CXX=${RASPBIANSRC}/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/g++
+# export CC=${RASPBIANSRC}/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/gcc
+
+Build:
+# cd grfutils
+# cmake .
+# make
+
+

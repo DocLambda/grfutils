@@ -433,9 +433,9 @@ int grf_radio_write(struct grf_radio *radio, const char *message, size_t len)
 		len     -= count;
 	}
 
-	if (fsync(radio->fd))
+	if (tcflush(radio->fd, TCOFLUSH))
 	{
-		grf_logging_err("Calling fsync on %d failed: %s", radio->fd, strerror(errno));
+		grf_logging_err("Calling tcflush on %d failed: %s", radio->fd, strerror(errno));
 		return errno;
 	}
 
@@ -450,9 +450,9 @@ int grf_radio_write_ctrl(struct grf_radio *radio, char ctrl)
 	if (write(radio->fd, &ctrl, sizeof(char)) < 0)
 		return errno;
 
-	if (fsync(radio->fd))
+	if (tcflush(radio->fd, TCOFLUSH))
 	{
-		grf_logging_err("Calling fsync on %d failed: %s", radio->fd, strerror(errno));
+		grf_logging_err("Calling tcflush on %d failed: %s", radio->fd, strerror(errno));
 		return errno;
 	}
 
